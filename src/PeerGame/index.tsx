@@ -1,13 +1,16 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import { PageMain } from '@app/components/PageMain';
+import { CARD_VARIANTS } from '@app/core/game/constants';
 import { IGame } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { Stack, Typography } from '@mui/material';
+import { useMutation } from '@tanstack/react-query';
 import { produce } from 'immer';
 import { DataConnection, Peer } from 'peerjs';
 import { useParams } from 'react-router-dom';
+import { Card } from './Card';
 
 export const PeerGame: FC = () => {
   const { id } = useParams();
@@ -57,6 +60,17 @@ export const PeerGame: FC = () => {
     );
   }, [peer, game]);
 
+  const pullCardMutation = useMutation({
+    mutationFn: () => {
+      return Promise.resolve();
+    },
+  });
+  const selectOpenedCardMutation = useMutation({
+    mutationFn: () => {
+      return Promise.resolve();
+    },
+  });
+
   return (
     <PageMain>
       <Stack>
@@ -68,6 +82,88 @@ export const PeerGame: FC = () => {
           ))}
         </Stack>
       </Stack>
+      <div style={{ height: '100%', padding: '16px' }}>
+        <div>
+          <div>Deck ({game.board.closedCardNumbers.length})</div>
+          <button
+            disabled={
+              game.board.turnUsername !== username ||
+              pullCardMutation.isPending ||
+              !game.board.closedCardNumbers.length ||
+              !!game.board.pulledCardNumberToChange ||
+              !!game.board.openedCardNumberToUse
+            }
+            onClick={() => pullCardMutation.mutate()}
+          >
+            pull card
+          </button>
+          <div>Pulled card</div>
+          {game.board.pulledCardNumberToChange && (
+            <Card
+              number={game.board.pulledCardNumberToChange}
+              power={CARD_VARIANTS.find((card) => card.number === game.board.pulledCardNumberToChange)!.power}
+              isActionAvailable={false}
+              isProtected={false}
+            />
+          )}
+          <div>Opened cards</div>
+          {game.board.openCardNumbers.map((openedCardNumber) => (
+            <Card
+              key={openedCardNumber}
+              number={openedCardNumber}
+              power={CARD_VARIANTS.find((card) => card.number === openedCardNumber)!.power}
+              isActionAvailable={false}
+              isProtected={false}
+              onClick={() => {
+                if (game.board.openedCardNumberToUse) return;
+                if (selectOpenedCardMutation.isPending) return;
+                selectOpenedCardMutation.mutate({ boardId: board.id, cardNumber: openedCardNumber });
+              }}
+            />
+          ))}
+          <div>Selected opened card</div>
+          {game.board.openedCardNumberToUse && (
+            <Card
+              number={game.board.openedCardNumberToUse}
+              power={CARD_VARIANTS.find((card) => card.number === game.board.openedCardNumberToUse)!.power}
+              isActionAvailable={false}
+              isProtected={false}
+            />
+          )}
+          <div>Discard pile ({game.board.discardedCardNumbers.length})</div>
+        </div>
+        <div>Towers</div>
+        {/* Decks horizontal list */}
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            justifyContent: 'space-between',
+            paddingLeft: '8px',
+            paddingRight: '8px',
+          }}
+        >
+          13
+          {/* <UserTower
+            id={userTower.id}
+            boardId={board.id}
+            turnUserId={board.turn_user_id ?? null}
+            cards={userTower.card_in_towerCollection?.edges || []}
+            userId={username}
+            openedCardToUse={game.board.openedCardNumberToUse ?? null}
+            pulledCardToChange={game.board.pulledCardNumberToChange ?? null}
+          />
+          {otherTowers?.map(({ node: tower }) => (
+            <Tower
+              key={tower.id}
+              id={tower.id}
+              userId={tower.user_id}
+              cards={tower.card_in_towerCollection?.edges || []}
+              cardVariants={cardVariants}
+            />
+          ))} */}
+        </div>
+      </div>
     </PageMain>
   );
 };
