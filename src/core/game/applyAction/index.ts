@@ -13,6 +13,8 @@ export const applyAction = (board: IBoard, action: TGameAction): void => {
       break;
     }
     case EGameActionType.PullCard: {
+      console.log('pull card');
+
       pullCard(action.params, board);
       break;
     }

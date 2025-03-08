@@ -18,5 +18,7 @@ export const pullCard = async (params: IPullCardParams, board: IBoard): Promise<
 
   board.pulledCardNumberToChange = cardFromBoardDeck;
 
+  console.log(board.pulledCardNumberToChange);
+
   // await notifyBoardStateChanged(boardId);
 };

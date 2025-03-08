@@ -3,6 +3,7 @@ import { FC, useEffect, useMemo, useState } from 'react';
 import { PageMain } from '@app/components/PageMain';
 import { applyAction } from '@app/core/game/applyAction';
 import { CARD_VARIANTS } from '@app/core/game/constants';
+import { EGameActionType } from '@app/core/game/enums';
 import { IBoard, IGame, TGameAction } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
@@ -84,8 +85,9 @@ export const PeerGame: FC = () => {
 
   const broadcastAction = (action: TGameAction) => {
     for (const connection of Object.values(playersConnections)) {
-      connection.send(JSON.stringify(action));
+      connection.send(action);
     }
+    setBoard((prev) => produce(prev, (draft) => applyAction(draft, action)));
   };
 
   const pullCardMutation = useMutation({
@@ -121,7 +123,12 @@ export const PeerGame: FC = () => {
               !!board.pulledCardNumberToChange ||
               !!board.openedCardNumberToUse
             }
-            onClick={() => pullCardMutation.mutate()}
+            onClick={() => {
+              broadcastAction({
+                type: EGameActionType.PullCard,
+                params: { currentUsername: username },
+              });
+            }}
           >
             pull card
           </button>

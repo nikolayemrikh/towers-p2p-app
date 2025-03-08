@@ -1,5 +1,3 @@
-import { IBoard } from '../../types.ts';
-
-export interface IPullCardParams extends IBoard {
+export interface IPullCardParams {
   currentUsername: string;
 }

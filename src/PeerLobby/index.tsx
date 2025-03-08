@@ -51,7 +51,8 @@ export const PeerLobby: FC = () => {
   useEffect(() => {
     if (!playersConnections) return;
     const handler = (data: unknown) => {
-      const event = JSON.parse(data as string) as TGameAction;
+      if (typeof data !== 'object') return;
+      const event = data as TGameAction;
       if (event.type === EGameActionType.InitializeGame) {
         const game = event.params;
         navigate(`${routes.game}/${game.id}`);
@@ -73,7 +74,7 @@ export const PeerLobby: FC = () => {
 
   const broadcastAction = (action: TGameAction) => {
     for (const connection of Object.values(playersConnections)) {
-      connection.send(JSON.stringify(action));
+      connection.send(action);
     }
   };
 
