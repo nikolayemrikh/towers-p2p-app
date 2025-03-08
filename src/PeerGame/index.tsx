@@ -5,6 +5,7 @@ import { IGame } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { Stack, Typography } from '@mui/material';
+import { produce } from 'immer';
 import { DataConnection, Peer } from 'peerjs';
 import { useParams } from 'react-router-dom';
 
@@ -24,14 +25,18 @@ export const PeerGame: FC = () => {
     setPeer(peer);
 
     peer.on('connection', (connection) => {
-      setPlayersConnections((prev) => ({ ...prev, [connection.peer]: connection }));
+      setPlayersConnections((prev) =>
+        produce(prev, (draft) => {
+          draft[connection.peer] = connection;
+        })
+      );
     });
     peer.on('disconnected', (connectionId) => {
-      setPlayersConnections((prev) => {
-        const newConnections = { ...prev };
-        delete newConnections[connectionId];
-        return newConnections;
-      });
+      setPlayersConnections((prev) =>
+        produce(prev, (draft) => {
+          delete draft[connectionId];
+        })
+      );
     });
 
     return () => {
