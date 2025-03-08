@@ -2,7 +2,8 @@ import { FC, useEffect, useMemo, useState } from 'react';
 
 import { PageMain } from '@app/components/PageMain';
 import { CARD_VARIANTS } from '@app/core/game/constants';
-import { IGame } from '@app/core/game/types';
+import { EGameActionType } from '@app/core/game/enums';
+import { IGame, IGameAction } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { Stack, Typography } from '@mui/material';
@@ -11,6 +12,8 @@ import { produce } from 'immer';
 import { DataConnection, Peer } from 'peerjs';
 import { useParams } from 'react-router-dom';
 import { Card } from './Card';
+import { Tower } from './Tower';
+import { UserTower } from './UserTower';
 
 export const PeerGame: FC = () => {
   const { id } = useParams();
@@ -59,6 +62,12 @@ export const PeerGame: FC = () => {
       })
     );
   }, [peer, game]);
+
+  const broadcastAction = (action: IGameAction<EGameActionType>) => {
+    for (const connection of Object.values(playersConnections)) {
+      connection.send(JSON.stringify(action));
+    }
+  };
 
   const pullCardMutation = useMutation({
     mutationFn: () => {
@@ -134,35 +143,24 @@ export const PeerGame: FC = () => {
         </div>
         <div>Towers</div>
         {/* Decks horizontal list */}
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            justifyContent: 'space-between',
-            paddingLeft: '8px',
-            paddingRight: '8px',
-          }}
-        >
-          13
-          {/* <UserTower
-            id={userTower.id}
-            boardId={board.id}
-            turnUserId={board.turn_user_id ?? null}
-            cards={userTower.card_in_towerCollection?.edges || []}
+        <Stack direction="row" justifyContent="space-between" paddingX={1}>
+          <UserTower
+            boardId={id}
+            turnUserId={game.board.turnUsername ?? null}
+            cards={game.board.towers[username].cards}
             userId={username}
             openedCardToUse={game.board.openedCardNumberToUse ?? null}
             pulledCardToChange={game.board.pulledCardNumberToChange ?? null}
+            makeAction={(action) => {
+              broadcastAction(action);
+            }}
           />
-          {otherTowers?.map(({ node: tower }) => (
-            <Tower
-              key={tower.id}
-              id={tower.id}
-              userId={tower.user_id}
-              cards={tower.card_in_towerCollection?.edges || []}
-              cardVariants={cardVariants}
-            />
-          ))} */}
-        </div>
+          {Object.entries(game.board.towers)
+            .filter(([towerUsername]) => towerUsername !== username)
+            .map(([towerUsername, tower]) => (
+              <Tower key={towerUsername} cards={tower.cards} />
+            ))}
+        </Stack>
       </div>
     </PageMain>
   );

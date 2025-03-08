@@ -5,7 +5,7 @@ import { CARD_VARIANTS } from '../../constants';
 import { EPower } from '../../enums';
 import { TUseSelectedCardParams } from './types';
 
-export const useSelectedCard = async (params: TUseSelectedCardParams, board: IBoard) => {
+export const useSelectedCard = async (params: TUseSelectedCardParams, board: IBoard): Promise<IBoard> => {
   const currentUsername = params.currentUsername;
   if (currentUsername !== board.turnUsername) throw new Error('Can not use card since it is not current user turn');
 
@@ -106,4 +106,6 @@ export const useSelectedCard = async (params: TUseSelectedCardParams, board: IBo
   await passTurnToNextUser(board, currentUsername);
 
   // await notifyBoardStateChanged(supabaseServiceClient, boardId);
+
+  return board;
 };

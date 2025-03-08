@@ -6,6 +6,7 @@ import { createBoard } from '@app/core/game/createBoard';
 import { IGame } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
+import { getUsernameFromPeerId } from '@app/core/peer/getUsernameFromPeerId';
 import { Button, Stack, TextField, Typography } from '@mui/material';
 import { produce } from 'immer';
 import Peer, { DataConnection } from 'peerjs';
@@ -143,8 +144,8 @@ export const PeerLobby: FC = () => {
               const games = JSON.parse(localStorage.getItem(ELocalStorageKey.Games) ?? '{}');
 
               const players = [
-                ...Object.values(playersConnections).map((connection) => connection.peer),
-                getPeerId(username),
+                ...Object.values(playersConnections).map((connection) => getUsernameFromPeerId(connection.peer)),
+                username,
               ];
               const game: IGame = {
                 id: gameId,
