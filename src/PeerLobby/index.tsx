@@ -24,15 +24,21 @@ export const PeerLobby: FC = () => {
   const [currentUsername, setCurrentUsername] = useState(username);
   const [peerId, setPeerId] = useState('');
   const [peer, setPeer] = useState<Peer | null>(null);
-  const [connection, setConnection] = useState<DataConnection | null>(null);
-  const [connectedIds, setConnectedIds] = useState<string[]>([]);
+  const [playersConnections, setPlayersConnections] = useState<Record<string, DataConnection>>({});
 
   useEffect(() => {
     const peer = new Peer(getPeerId(username));
     setPeer(peer);
 
     peer.on('connection', (connection) => {
-      setConnection(connection);
+      setPlayersConnections((prev) => ({ ...prev, [connection.peer]: connection }));
+    });
+    peer.on('disconnected', (connectionId) => {
+      setPlayersConnections((prev) => {
+        const newConnections = { ...prev };
+        delete newConnections[connectionId];
+        return newConnections;
+      });
     });
 
     return () => {
@@ -41,14 +47,8 @@ export const PeerLobby: FC = () => {
   }, [username]);
 
   useEffect(() => {
-    if (!connection) return;
-    connection.on('open', () => {
-      setConnectedIds((prev) => [...prev, connection.peer]);
-    });
-    connection.on('close', () => {
-      setConnectedIds((prev) => prev.filter((id) => id !== connection.peer));
-    });
-    connection.on('data', (data) => {
+    if (!playersConnections) return;
+    const handler = (data: INewGameEvent) => {
       if (typeof data !== 'object') return;
       const event = data as INewGameEvent;
       if (event.type === 'new-game') {
@@ -58,12 +58,17 @@ export const PeerLobby: FC = () => {
         games[game.id] = game;
         localStorage.setItem(ELocalStorageKey.Games, JSON.stringify(games));
       }
-    });
+    };
+    for (const connection of Object.values(playersConnections)) {
+      connection.on('data', handler as (data: unknown) => void);
+    }
 
     return () => {
-      connection.close();
+      for (const connection of Object.values(playersConnections)) {
+        connection.off('data', handler as (data: unknown) => void);
+      }
     };
-  }, [navigate, connection]);
+  }, [navigate, playersConnections]);
 
   return (
     <PageMain>
@@ -105,7 +110,7 @@ export const PeerLobby: FC = () => {
             <Button
               onClick={() => {
                 const connection = peer.connect(getPeerId(peerId));
-                setConnection(connection);
+                setPlayersConnections((prev) => ({ ...prev, [connection.peer]: connection }));
               }}
             >
               Подключиться
@@ -115,20 +120,23 @@ export const PeerLobby: FC = () => {
 
         <Stack direction="column" gap={2}>
           <Typography variant="body1">Подключенные игроки</Typography>
-          {connectedIds.map((id) => (
-            <Typography variant="body1" key={id}>
-              {id}
+          {Object.values(playersConnections).map((connection) => (
+            <Typography variant="body1" key={connection.peer}>
+              {connection.peer}
             </Typography>
           ))}
         </Stack>
 
-        {connection && (
+        {Object.values(playersConnections).length > 0 && (
           <Button
             onClick={async () => {
               const gameId = uuid();
               const games = JSON.parse(localStorage.getItem(ELocalStorageKey.Games) ?? '{}');
 
-              const players = [...connectedIds, getPeerId(username)];
+              const players = [
+                ...Object.values(playersConnections).map((connection) => connection.peer),
+                getPeerId(username),
+              ];
               const game: IGame = {
                 id: gameId,
                 players,
@@ -137,7 +145,9 @@ export const PeerLobby: FC = () => {
               };
               games[gameId] = game;
               localStorage.setItem(ELocalStorageKey.Games, JSON.stringify(games));
-              connection.send({ type: 'new-game', game });
+              for (const connection of Object.values(playersConnections)) {
+                connection.send({ type: 'new-game', game });
+              }
               navigate(`${routes.game}/${gameId}`);
             }}
           >
