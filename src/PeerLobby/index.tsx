@@ -7,6 +7,7 @@ import { IGame } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { Button, Stack, TextField, Typography } from '@mui/material';
+import { produce } from 'immer';
 import Peer, { DataConnection } from 'peerjs';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
@@ -31,14 +32,18 @@ export const PeerLobby: FC = () => {
     setPeer(peer);
 
     peer.on('connection', (connection) => {
-      setPlayersConnections((prev) => ({ ...prev, [connection.peer]: connection }));
+      setPlayersConnections((prev) =>
+        produce(prev, (draft) => {
+          draft[connection.peer] = connection;
+        })
+      );
     });
     peer.on('disconnected', (connectionId) => {
-      setPlayersConnections((prev) => {
-        const newConnections = { ...prev };
-        delete newConnections[connectionId];
-        return newConnections;
-      });
+      setPlayersConnections((prev) =>
+        produce(prev, (draft) => {
+          delete draft[connectionId];
+        })
+      );
     });
 
     return () => {
@@ -110,7 +115,11 @@ export const PeerLobby: FC = () => {
             <Button
               onClick={() => {
                 const connection = peer.connect(getPeerId(peerId));
-                setPlayersConnections((prev) => ({ ...prev, [connection.peer]: connection }));
+                setPlayersConnections((prev) =>
+                  produce(prev, (draft) => {
+                    draft[connection.peer] = connection;
+                  })
+                );
               }}
             >
               Подключиться

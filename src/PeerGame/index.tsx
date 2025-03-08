@@ -46,15 +46,15 @@ export const PeerGame: FC = () => {
 
   useEffect(() => {
     if (!peer) return;
-    setPlayersConnections((prev) => {
-      const newConnections = { ...prev };
-      for (const player of game.players) {
-        const connectionId = getPeerId(player);
-        if (newConnections[connectionId]) continue;
-        newConnections[connectionId] = peer.connect(connectionId);
-      }
-      return newConnections;
-    });
+    setPlayersConnections((prev) =>
+      produce(prev, (draft) => {
+        for (const player of game.players) {
+          const connectionId = getPeerId(player);
+          if (draft[connectionId]) continue;
+          draft[connectionId] = peer.connect(connectionId);
+        }
+      })
+    );
   }, [peer, game]);
 
   return (
