@@ -41,17 +41,23 @@ export interface IGameBlockChain {
   initialBoard: IBoard;
   blocks: IStepBlock[];
 }
-
-export type TActionParams = {
-  [EGameActionType.UseCard]: TUseSelectedCardParams;
-};
-
-export interface IGameAction<T extends EGameActionType> {
-  type: T;
-  params: TActionParams[T];
+export interface IBaseGameAction {
+  type: EGameActionType;
 }
+
+export interface IUseCardActionParams extends IBaseGameAction {
+  type: EGameActionType.UseCard;
+  params: TUseSelectedCardParams;
+}
+
+export interface IInitializeGameActionParams extends IBaseGameAction {
+  type: EGameActionType.InitializeGame;
+  params: IGame;
+}
+
+export type TGameAction = IUseCardActionParams | IInitializeGameActionParams;
 
 interface IStepBlock {
   username: string;
-  actionParams: IGameAction<EGameActionType>;
+  actionParams: TGameAction;
 }

@@ -2,8 +2,7 @@ import { FC, useEffect, useMemo, useState } from 'react';
 
 import { PageMain } from '@app/components/PageMain';
 import { CARD_VARIANTS } from '@app/core/game/constants';
-import { EGameActionType } from '@app/core/game/enums';
-import { IGame, IGameAction } from '@app/core/game/types';
+import { IGame, TGameAction } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { Stack, Typography } from '@mui/material';
@@ -63,7 +62,7 @@ export const PeerGame: FC = () => {
     );
   }, [peer, game]);
 
-  const broadcastAction = (action: IGameAction<EGameActionType>) => {
+  const broadcastAction = (action: TGameAction) => {
     for (const connection of Object.values(playersConnections)) {
       connection.send(JSON.stringify(action));
     }

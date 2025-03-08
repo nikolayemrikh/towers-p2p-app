@@ -3,7 +3,8 @@ import { FC, useEffect, useState } from 'react';
 import { routes } from '@app/Routes/routes';
 import { PageMain } from '@app/components/PageMain';
 import { createBoard } from '@app/core/game/createBoard';
-import { IGame } from '@app/core/game/types';
+import { EGameActionType } from '@app/core/game/enums';
+import { IGame, TGameAction } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { getUsernameFromPeerId } from '@app/core/peer/getUsernameFromPeerId';
@@ -12,11 +13,6 @@ import { produce } from 'immer';
 import Peer, { DataConnection } from 'peerjs';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
-
-interface INewGameEvent {
-  type: 'new-game';
-  game: IGame;
-}
 
 export const PeerLobby: FC = () => {
   // const { id } = useParams();
@@ -54,11 +50,11 @@ export const PeerLobby: FC = () => {
 
   useEffect(() => {
     if (!playersConnections) return;
-    const handler = (data: INewGameEvent) => {
+    const handler = (data: unknown) => {
       if (typeof data !== 'object') return;
-      const event = data as INewGameEvent;
-      if (event.type === 'new-game') {
-        const { game } = event;
+      const event = data as TGameAction;
+      if (event.type === EGameActionType.InitializeGame) {
+        const game = event.params;
         navigate(`${routes.game}/${game.id}`);
         const games = JSON.parse(localStorage.getItem(ELocalStorageKey.Games) ?? '{}');
         games[game.id] = game;

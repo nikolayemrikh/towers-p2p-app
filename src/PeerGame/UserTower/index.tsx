@@ -4,7 +4,7 @@ import { checkIsUserCardAvailableForInitialAction } from '@app/Board/helpers/che
 import { TUseSelectedCardParams } from '@app/core/game/actions/useSelectedCard/types';
 import { CARD_VARIANTS } from '@app/core/game/constants';
 import { EGameActionType, EPower } from '@app/core/game/enums';
-import { IGameAction, ITowerCard } from '@app/core/game/types';
+import { ITowerCard, TGameAction } from '@app/core/game/types';
 import { useMutation } from '@tanstack/react-query';
 import { Card } from '../Card';
 
@@ -17,7 +17,7 @@ export const UserTower: FC<{
   cards: ITowerCard[];
   openedCardToUse: number | null;
   pulledCardToChange: number | null;
-  makeAction: (action: IGameAction<EGameActionType>) => void;
+  makeAction: (action: TGameAction) => void;
 }> = (props) => {
   const { boardId, userId, turnUserId, cards, openedCardToUse, pulledCardToChange, makeAction } = props;
   const [selectedCardIndexAccessor, setSelectedCardIndex] = useState<number | null>(null);
