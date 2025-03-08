@@ -1,28 +1,19 @@
 import { FC, useEffect, useState } from 'react';
 
-import { IGameBlockChain, initializeGameState } from '@app/PeerGame';
+import { routes } from '@app/Routes/routes';
 import { PageMain } from '@app/components/PageMain';
+import { createBoard } from '@app/core/game/createBoard';
+import { IGame } from '@app/core/game/types';
+import { ELocalStorageKey } from '@app/core/localStorage/constants';
+import { getPeerId } from '@app/core/peer/getPeerId';
 import { Button, Stack, TextField, Typography } from '@mui/material';
 import Peer, { DataConnection } from 'peerjs';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 
-const PEER_PREFIX = 'magic-towers';
-
-const PEER_ID_SEPARATOR = '-';
-
-const getPeerId = (username: string) => PEER_PREFIX + PEER_ID_SEPARATOR + username;
-
 interface INewGameEvent {
   type: 'new-game';
   game: IGame;
-}
-
-interface IGame {
-  id: string;
-  players: string[];
-  createdAt: Date;
-  opponentPublicKey: string;
 }
 
 export const PeerLobby: FC = () => {
@@ -62,10 +53,10 @@ export const PeerLobby: FC = () => {
       const event = data as INewGameEvent;
       if (event.type === 'new-game') {
         const { game } = event;
-        navigate(`/peer-game/${game.id}`);
-        const games = JSON.parse(localStorage.getItem('games') ?? '{}');
+        navigate(`${routes.game}/${game.id}`);
+        const games = JSON.parse(localStorage.getItem(ELocalStorageKey.Games) ?? '{}');
         games[game.id] = game;
-        localStorage.setItem('games', JSON.stringify(games));
+        localStorage.setItem(ELocalStorageKey.Games, JSON.stringify(games));
       }
     });
 
@@ -84,7 +75,7 @@ export const PeerLobby: FC = () => {
             <Typography variant="body1">Юзернейм: {username}</Typography>
             <Button
               onClick={() => {
-                localStorage.removeItem('username');
+                localStorage.removeItem(ELocalStorageKey.Username);
                 setUsername('');
               }}
             >
@@ -97,7 +88,7 @@ export const PeerLobby: FC = () => {
             <TextField value={currentUsername} onChange={(e) => setCurrentUsername(e.target.value)} />
             <Button
               onClick={() => {
-                localStorage.setItem('username', currentUsername);
+                localStorage.setItem(ELocalStorageKey.Username, currentUsername);
                 setUsername(currentUsername);
                 setCurrentUsername('');
               }}
@@ -135,58 +126,19 @@ export const PeerLobby: FC = () => {
           <Button
             onClick={async () => {
               const gameId = uuid();
-              const games = JSON.parse(localStorage.getItem('games') ?? '{}');
-              const keyPair = await crypto.subtle.generateKey(
-                {
-                  name: 'ECDSA',
-                  namedCurve: 'P-256', // Можно использовать "P-384" или "P-521"
-                },
-                true, // Доступен ли экспорт ключей
-                ['sign', 'verify']
-              );
-              const exportPublicKey = async (publicKey: CryptoKey) => {
-                const exported = await crypto.subtle.exportKey('spki', publicKey);
-                return btoa(String.fromCharCode(...new Uint8Array(exported))); // Кодируем в base64
-              };
+              const games = JSON.parse(localStorage.getItem(ELocalStorageKey.Games) ?? '{}');
 
-              // const storeKeyInIndexedDB = (key: CryptoKey) => {
-              //   const db = indexedDB.open('asd');
-              //   const store = db.result.createObjectStore('key');
-              //   store.add(key);
-              // };
-              // storeKeyInIndexedDB(keyPair.publicKey);
-
-              const publicKey = await exportPublicKey(keyPair.publicKey);
-
+              const players = [...connectedIds, getPeerId(username)];
               const game: IGame = {
                 id: gameId,
-                players: [...connectedIds, getPeerId(username)],
+                players,
                 createdAt: new Date(),
-                opponentPublicKey: publicKey,
+                board: createBoard(players),
               };
-              const gameState = initializeGameState(game);
               games[gameId] = game;
-              localStorage.setItem('games', JSON.stringify(games));
-              const gameStates = JSON.parse(localStorage.getItem('game-states') ?? '{}');
-              localStorage.setItem(
-                'game-states',
-                JSON.stringify({
-                  ...gameStates,
-                  [game.id]: {
-                    initialBoard: gameState,
-                    blocks: [
-                      {
-                        createdAt: new Date().toISOString(),
-                        turnUsername: game.players[0],
-                        prevBlockHash: '',
-                        hash: '',
-                      },
-                    ],
-                  } satisfies IGameBlockChain,
-                } satisfies Record<string, IGameBlockChain>)
-              );
+              localStorage.setItem(ELocalStorageKey.Games, JSON.stringify(games));
               connection.send({ type: 'new-game', game });
-              navigate(`/peer-game/${gameId}`);
+              navigate(`${routes.game}/${gameId}`);
             }}
           >
             Начать новую игру

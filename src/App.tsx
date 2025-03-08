@@ -7,6 +7,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import { CssBaseline, Stack } from '@mui/material';
 import { Routes } from './Routes';
+import { ThemeModeSettingContextProviderWrapper } from './core/theme/ThemeModeSettingContextProviderWrapper';
 import { ThemeProvider } from './core/theme/ThemeProvider';
 import { MIN_WIDTH } from './core/theme/constants';
 
@@ -16,14 +17,16 @@ export const App: FC = () => {
   return (
     <StrictMode>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider>
-          <CssBaseline enableColorScheme />
-          <Stack height="100%" minWidth={MIN_WIDTH}>
-            <BrowserRouter>
-              <Routes />
-            </BrowserRouter>
-          </Stack>
-        </ThemeProvider>
+        <ThemeModeSettingContextProviderWrapper>
+          <ThemeProvider>
+            <CssBaseline enableColorScheme />
+            <Stack height="100%" minWidth={MIN_WIDTH}>
+              <BrowserRouter>
+                <Routes />
+              </BrowserRouter>
+            </Stack>
+          </ThemeProvider>
+        </ThemeModeSettingContextProviderWrapper>
       </QueryClientProvider>
     </StrictMode>
   );
