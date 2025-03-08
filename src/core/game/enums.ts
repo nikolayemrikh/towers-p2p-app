@@ -12,4 +12,5 @@ export enum EPower {
 export enum EGameActionType {
   InitializeGame = 'initialize_game',
   UseCard = 'use_card',
+  PullCard = 'pull_card',
 }

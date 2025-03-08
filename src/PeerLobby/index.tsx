@@ -51,8 +51,7 @@ export const PeerLobby: FC = () => {
   useEffect(() => {
     if (!playersConnections) return;
     const handler = (data: unknown) => {
-      if (typeof data !== 'object') return;
-      const event = data as TGameAction;
+      const event = JSON.parse(data as string) as TGameAction;
       if (event.type === EGameActionType.InitializeGame) {
         const game = event.params;
         navigate(`${routes.game}/${game.id}`);
@@ -71,6 +70,12 @@ export const PeerLobby: FC = () => {
       }
     };
   }, [navigate, playersConnections]);
+
+  const broadcastAction = (action: TGameAction) => {
+    for (const connection of Object.values(playersConnections)) {
+      connection.send(JSON.stringify(action));
+    }
+  };
 
   return (
     <PageMain>
@@ -151,9 +156,7 @@ export const PeerLobby: FC = () => {
               };
               games[gameId] = game;
               localStorage.setItem(ELocalStorageKey.Games, JSON.stringify(games));
-              for (const connection of Object.values(playersConnections)) {
-                connection.send({ type: 'new-game', game });
-              }
+              broadcastAction({ type: EGameActionType.InitializeGame, params: game });
               navigate(`${routes.game}/${gameId}`);
             }}
           >

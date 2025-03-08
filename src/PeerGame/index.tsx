@@ -1,8 +1,9 @@
 import { FC, useEffect, useMemo, useState } from 'react';
 
 import { PageMain } from '@app/components/PageMain';
+import { applyAction } from '@app/core/game/applyAction';
 import { CARD_VARIANTS } from '@app/core/game/constants';
-import { IGame, TGameAction } from '@app/core/game/types';
+import { IBoard, IGame, TGameAction } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { Stack, Typography } from '@mui/material';
@@ -22,6 +23,7 @@ export const PeerGame: FC = () => {
   if (!username) throw new Error('username is required');
 
   const game = useMemo(() => JSON.parse(localStorage.getItem(ELocalStorageKey.Games) ?? '{}')[id] as IGame, [id]);
+  const [board, setBoard] = useState<IBoard>(game.board);
   const [peer, setPeer] = useState<Peer | null>(null);
   const [playersConnections, setPlayersConnections] = useState<Record<string, DataConnection>>({});
 
@@ -62,6 +64,24 @@ export const PeerGame: FC = () => {
     );
   }, [peer, game]);
 
+  useEffect(() => {
+    if (!playersConnections) return;
+    const handler = async (data: unknown) => {
+      if (typeof data !== 'object') return;
+      const event = data as TGameAction;
+      setBoard((prev) => produce(prev, (draft) => applyAction(draft, event)));
+    };
+    for (const connection of Object.values(playersConnections)) {
+      connection.on('data', handler as (data: unknown) => void);
+    }
+
+    return () => {
+      for (const connection of Object.values(playersConnections)) {
+        connection.off('data', handler as (data: unknown) => void);
+      }
+    };
+  }, [playersConnections]);
+
   const broadcastAction = (action: TGameAction) => {
     for (const connection of Object.values(playersConnections)) {
       connection.send(JSON.stringify(action));
@@ -92,30 +112,30 @@ export const PeerGame: FC = () => {
       </Stack>
       <div style={{ height: '100%', padding: '16px' }}>
         <div>
-          <div>Deck ({game.board.closedCardNumbers.length})</div>
+          <div>Deck ({board.closedCardNumbers.length})</div>
           <button
             disabled={
-              game.board.turnUsername !== username ||
+              board.turnUsername !== username ||
               pullCardMutation.isPending ||
-              !game.board.closedCardNumbers.length ||
-              !!game.board.pulledCardNumberToChange ||
-              !!game.board.openedCardNumberToUse
+              !board.closedCardNumbers.length ||
+              !!board.pulledCardNumberToChange ||
+              !!board.openedCardNumberToUse
             }
             onClick={() => pullCardMutation.mutate()}
           >
             pull card
           </button>
           <div>Pulled card</div>
-          {game.board.pulledCardNumberToChange && (
+          {board.pulledCardNumberToChange && (
             <Card
-              number={game.board.pulledCardNumberToChange}
-              power={CARD_VARIANTS.find((card) => card.number === game.board.pulledCardNumberToChange)!.power}
+              number={board.pulledCardNumberToChange}
+              power={CARD_VARIANTS.find((card) => card.number === board.pulledCardNumberToChange)!.power}
               isActionAvailable={false}
               isProtected={false}
             />
           )}
           <div>Opened cards</div>
-          {game.board.openCardNumbers.map((openedCardNumber) => (
+          {board.openCardNumbers.map((openedCardNumber) => (
             <Card
               key={openedCardNumber}
               number={openedCardNumber}
@@ -123,38 +143,38 @@ export const PeerGame: FC = () => {
               isActionAvailable={false}
               isProtected={false}
               onClick={() => {
-                if (game.board.openedCardNumberToUse) return;
+                if (board.openedCardNumberToUse) return;
                 if (selectOpenedCardMutation.isPending) return;
                 selectOpenedCardMutation.mutate({ boardId: board.id, cardNumber: openedCardNumber });
               }}
             />
           ))}
           <div>Selected opened card</div>
-          {game.board.openedCardNumberToUse && (
+          {board.openedCardNumberToUse && (
             <Card
-              number={game.board.openedCardNumberToUse}
-              power={CARD_VARIANTS.find((card) => card.number === game.board.openedCardNumberToUse)!.power}
+              number={board.openedCardNumberToUse}
+              power={CARD_VARIANTS.find((card) => card.number === board.openedCardNumberToUse)!.power}
               isActionAvailable={false}
               isProtected={false}
             />
           )}
-          <div>Discard pile ({game.board.discardedCardNumbers.length})</div>
+          <div>Discard pile ({board.discardedCardNumbers.length})</div>
         </div>
         <div>Towers</div>
         {/* Decks horizontal list */}
         <Stack direction="row" justifyContent="space-between" paddingX={1}>
           <UserTower
             boardId={id}
-            turnUserId={game.board.turnUsername ?? null}
-            cards={game.board.towers[username].cards}
+            turnUserId={board.turnUsername ?? null}
+            cards={board.towers[username].cards}
             userId={username}
-            openedCardToUse={game.board.openedCardNumberToUse ?? null}
-            pulledCardToChange={game.board.pulledCardNumberToChange ?? null}
+            openedCardToUse={board.openedCardNumberToUse ?? null}
+            pulledCardToChange={board.pulledCardNumberToChange ?? null}
             makeAction={(action) => {
               broadcastAction(action);
             }}
           />
-          {Object.entries(game.board.towers)
+          {Object.entries(board.towers)
             .filter(([towerUsername]) => towerUsername !== username)
             .map(([towerUsername, tower]) => (
               <Tower key={towerUsername} cards={tower.cards} />
