@@ -83,7 +83,7 @@ export const PeerGame: FC = () => {
         }
       })
     );
-  }, [peer, username, gameBlockchain.players, gameBlockchain.blocks]);
+  }, [peer, username, gameBlockchain.players]);
 
   const checkAllPlayersLastBlockHashes = useCallback(async () => {
     const ownLastBlock = gameBlockchain.blocks[gameBlockchain.blocks.length - 1];
