@@ -67,10 +67,12 @@ export const PeerGame: FC = () => {
 
     window.addEventListener('beforeunload', () => {
       peer.destroy();
+      setPeer(null);
     });
 
     return () => {
       peer.destroy();
+      setPeer(null);
     };
   }, [username]);
 
@@ -82,7 +84,7 @@ export const PeerGame: FC = () => {
           const connectionId = getPeerId(player);
           if (player === username) continue;
           if (draft[connectionId]) continue;
-          const connection = peer.connect(connectionId);
+          const connection = peer.connect(connectionId, { serialization: 'json' });
           draft[connectionId] = connection;
         }
       })
@@ -109,15 +111,15 @@ export const PeerGame: FC = () => {
     for (const connection of Object.values(playersConnections)) {
       connection.once('open', async () => {
         openedConnections++;
-        if (openedConnections === Object.keys(playersConnections).length) {
-          await checkAllPlayersLastBlockHashes();
-        }
         await connection.send({
           type: EPeerEventType.afterConnectionStartedCheck,
           data: {
             lastBlock: gameBlockchain.blocks[gameBlockchain.blocks.length - 1],
           },
         });
+        if (openedConnections === Object.keys(playersConnections).length) {
+          await checkAllPlayersLastBlockHashes();
+        }
       });
       connection.once('close', () => {
         setPlayersConnections((prev) =>
@@ -133,6 +135,7 @@ export const PeerGame: FC = () => {
   useEffect(() => {
     for (const connection of Object.values(playersConnections)) {
       const handler = async (data: unknown) => {
+        console.log('data', data);
         if (typeof data !== 'object') return;
         const event = data as TPeerEvent;
 
@@ -163,6 +166,8 @@ export const PeerGame: FC = () => {
   };
   const makeAction = async (action: TGameAction) => {
     const block = await createBlock(username, action, gameBlockchain);
+    console.log('block', block);
+
     await broadcastEvent({ type: EPeerEventType.action, data: block });
     setBoard((prev) => produce(prev, (draft) => applyAction(draft, block.action)));
   };

@@ -15,6 +15,6 @@ export const createBlock = async (
     username,
     action,
     hash: hashString,
-    previousHash: previousBlock?.hash || null,
+    previousHash: previousBlock?.hash || undefined,
   };
 };

@@ -88,39 +88,51 @@ export const PeerLobby: FC = () => {
       <Stack direction="column" gap={2}>
         <Typography variant="h1">Peer lobby</Typography>
 
-        {username ? (
-          <Stack direction="column" gap={2}>
-            <Typography variant="body1">Юзернейм: {username}</Typography>
-            <Button
-              onClick={() => {
-                localStorage.removeItem(ELocalStorageKey.Username);
-                setUsername('');
-              }}
-            >
-              Сменить юзернейм
-            </Button>
-          </Stack>
-        ) : (
-          <Stack direction="column" gap={2}>
-            <Typography variant="body1">Придумайте юзернейм</Typography>
-            <TextField value={currentUsername} onChange={(e) => setCurrentUsername(e.target.value)} />
-            <Button
-              onClick={() => {
-                localStorage.setItem(ELocalStorageKey.Username, currentUsername);
-                setUsername(currentUsername);
-                setCurrentUsername('');
-              }}
-            >
-              Сохранить
-            </Button>
-          </Stack>
-        )}
+        {match(username)
+          .when(
+            (u) => !!u,
+            () => (
+              <Stack direction="column" gap={2}>
+                <Typography variant="body1">Юзернейм: {username}</Typography>
+                <Button
+                  onClick={() => {
+                    localStorage.removeItem(ELocalStorageKey.Username);
+                    setUsername('');
+                  }}
+                >
+                  Сменить юзернейм
+                </Button>
+              </Stack>
+            )
+          )
+          .otherwise(() => {
+            const handleSubmit = () => {
+              localStorage.setItem(ELocalStorageKey.Username, currentUsername);
+              setUsername(currentUsername);
+              setCurrentUsername('');
+            };
+            return (
+              <Stack
+                direction="column"
+                gap={2}
+                component="form"
+                onSubmit={(evt) => {
+                  evt.preventDefault();
+                  handleSubmit();
+                }}
+              >
+                <Typography variant="body1">Придумайте юзернейм</Typography>
+                <TextField value={currentUsername} onChange={(e) => setCurrentUsername(e.target.value)} />
+                <Button type="submit">Сохранить</Button>
+              </Stack>
+            );
+          })}
 
         {match(peer)
           .with(P.nonNullable, (peer) => {
             const handleSubmit = () => {
               if (!peerUsername) return;
-              const connection = peer.connect(getPeerId(peerUsername));
+              const connection = peer.connect(getPeerId(peerUsername), { serialization: 'json' });
               connection.once('open', () => {
                 setPlayersConnections((prev) =>
                   produce(prev, (draft) => {

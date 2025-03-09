@@ -62,5 +62,5 @@ export interface IStepBlock {
   username: string;
   action: TGameAction;
   hash: string;
-  previousHash: string | null;
+  previousHash: string | undefined;
 }
