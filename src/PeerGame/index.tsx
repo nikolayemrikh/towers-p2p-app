@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PageMain } from '@app/components/PageMain';
 import { applyAction } from '@app/core/game/applyAction';
@@ -21,6 +21,10 @@ import { Card } from './Card';
 import { Tower } from './Tower';
 import { UserTower } from './UserTower';
 
+const getStoredGameBlockchains = (): Record<string, IGameBlockChain> => {
+  return JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
+};
+
 export const PeerGame: FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -29,17 +33,19 @@ export const PeerGame: FC = () => {
   const username = localStorage.getItem(ELocalStorageKey.Username);
   if (!username) throw new Error('username is required');
 
-  const [gameBlockchain] = useState(
-    () => JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}')[id] as IGameBlockChain
-  );
+  const players = useMemo(() => getStoredGameBlockchains()[id].players, [id]);
   const [board, setBoard] = useState<IBoard>(() => {
+    const gameBlockchain = getStoredGameBlockchains()[id];
     const board = gameBlockchain.initialBoard;
-    for (const block of gameBlockchain.blocks) {
-      if (!validateBlock(gameBlockchain, block)) {
+    for (let i = 0; i < gameBlockchain.blocks.length; i++) {
+      const block = gameBlockchain.blocks[i];
+      const previousBlock = gameBlockchain.blocks[i - 1];
+      if (previousBlock && previousBlock.hash !== block.previousHash) {
         throw new Error('Invalid block');
       }
-      produce(board, (draft) => applyAction(draft, block.action));
+      applyAction(board, block.action);
     }
+
     return board;
   });
   const [peer, setPeer] = useState<Peer | null>(null);
@@ -81,20 +87,23 @@ export const PeerGame: FC = () => {
 
   useEffect(() => {
     if (!peer) return;
-    setPlayersConnections((prev) =>
-      produce(prev, (draft) => {
-        for (const player of gameBlockchain.players) {
-          const connectionId = getPeerId(player);
-          if (player === username) continue;
-          if (draft[connectionId]) continue;
-          const connection = peer.connect(connectionId, { serialization: 'json' });
-          draft[connectionId] = connection;
-        }
-      })
-    );
-  }, [peer, username, gameBlockchain.players]);
+    setTimeout(() => {
+      setPlayersConnections((prev) =>
+        produce(prev, (draft) => {
+          for (const player of players) {
+            const connectionId = getPeerId(player);
+            if (player === username) continue;
+            if (draft[connectionId]) continue;
+            const connection = peer.connect(connectionId, { serialization: 'json' });
+            draft[connectionId] = connection;
+          }
+        })
+      );
+    }, 1000);
+  }, [peer, username, players]);
 
   const checkAllPlayersLastBlockHashes = useCallback(async () => {
+    const gameBlockchain = getStoredGameBlockchains()[id];
     const ownLastBlock = gameBlockchain.blocks[gameBlockchain.blocks.length - 1];
     const isAllPlayersLastBlockHashesEqual = Object.values(playersLastBlockHashes).every(
       (hash) => hash === ownLastBlock?.hash
@@ -104,7 +113,7 @@ export const PeerGame: FC = () => {
     if (!isAllPlayersLastBlockHashesEqual) {
       navigate('/');
     }
-  }, [gameBlockchain.blocks, playersLastBlockHashes, navigate]);
+  }, [id, playersLastBlockHashes, navigate]);
 
   useEffect(() => {
     if (!Object.keys(playersConnections).length) return;
@@ -114,6 +123,7 @@ export const PeerGame: FC = () => {
     for (const connection of Object.values(playersConnections)) {
       connection.once('open', async () => {
         openedConnections++;
+        const gameBlockchain = getStoredGameBlockchains()[id];
         await connection.send({
           type: EPeerEventType.afterConnectionStartedCheck,
           data: {
@@ -133,25 +143,22 @@ export const PeerGame: FC = () => {
         setIsAllPlayersSynced(false);
       });
     }
-  }, [playersConnections, gameBlockchain.blocks, checkAllPlayersLastBlockHashes]);
+  }, [id, playersConnections, checkAllPlayersLastBlockHashes]);
 
   useEffect(() => {
     for (const connection of Object.values(playersConnections)) {
       const handler = async (data: unknown) => {
         if (typeof data !== 'object') return;
         const event = data as TPeerEvent;
-
+        const gameBlockchain = getStoredGameBlockchains()[id];
         if (event.type === EPeerEventType.action) {
           const block = event.data;
           if (!validateBlock(gameBlockchain, block)) {
             throw new Error('Invalid block');
           }
           setBoard((prev) => produce(prev, (draft) => applyAction(draft, block.action)));
-          const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
-          gameBlockchains[id] = {
-            ...gameBlockchain,
-            blocks: [...gameBlockchain.blocks, block],
-          };
+          const gameBlockchains = getStoredGameBlockchains();
+          gameBlockchains[id].blocks.push(block);
           localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
         } else if (event.type === EPeerEventType.afterConnectionStartedCheck) {
           const receivedLastBlockHash = event.data.lastBlockHash;
@@ -171,21 +178,19 @@ export const PeerGame: FC = () => {
         connection.off('data');
       }
     };
-  }, [id, playersConnections, gameBlockchain]);
+  }, [id, playersConnections]);
 
   const broadcastEvent = async (event: TPeerEvent) => {
     await Promise.all(Object.values(playersConnections).map((connection) => connection.send(event)));
   };
   const makeAction = async (action: TGameAction) => {
+    const gameBlockchain = getStoredGameBlockchains()[id];
     const block = await createBlock(username, action, gameBlockchain);
 
     await broadcastEvent({ type: EPeerEventType.action, data: block });
     setBoard((prev) => produce(prev, (draft) => applyAction(draft, block.action)));
-    const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
-    gameBlockchains[id] = {
-      ...gameBlockchain,
-      blocks: [...gameBlockchain.blocks, block],
-    };
+    const gameBlockchains = getStoredGameBlockchains();
+    gameBlockchains[id].blocks.push(block);
     localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
   };
 
@@ -206,7 +211,7 @@ export const PeerGame: FC = () => {
         <Typography variant="h1">Peer Game</Typography>
         <Typography variant="h2">Players</Typography>
         <Stack>
-          {gameBlockchain.players.map((player) => (
+          {players.map((player) => (
             <Typography key={player}>{player}</Typography>
           ))}
         </Stack>
