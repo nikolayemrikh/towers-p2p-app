@@ -65,6 +65,10 @@ export const PeerGame: FC = () => {
       );
     });
 
+    window.addEventListener('beforeunload', () => {
+      peer.destroy();
+    });
+
     return () => {
       peer.destroy();
     };
