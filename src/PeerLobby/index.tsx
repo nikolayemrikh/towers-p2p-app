@@ -19,7 +19,7 @@ export const PeerLobby: FC = () => {
   // const { id } = useParams();
   // const [peer, setPeer] = useState<Peer | null>(null);
   const navigate = useNavigate();
-  const [username, setUsername] = useState(localStorage.getItem('username') ?? '');
+  const [username, setUsername] = useState(localStorage.getItem(ELocalStorageKey.Username) ?? '');
   const [currentUsername, setCurrentUsername] = useState(username);
   const [peerUsername, setPeerUsername] = useState('');
   const [peer, setPeer] = useState<Peer | null>(null);
@@ -123,11 +123,13 @@ export const PeerLobby: FC = () => {
             <Button
               onClick={() => {
                 const connection = peer.connect(getPeerId(peerUsername));
-                setPlayersConnections((prev) =>
-                  produce(prev, (draft) => {
-                    draft[connection.peer] = connection;
-                  })
-                );
+                connection.once('open', () => {
+                  setPlayersConnections((prev) =>
+                    produce(prev, (draft) => {
+                      draft[connection.peer] = connection;
+                    })
+                  );
+                });
               }}
             >
               Подключиться
