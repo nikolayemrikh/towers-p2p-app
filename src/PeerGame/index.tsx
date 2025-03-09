@@ -2,9 +2,11 @@ import { FC, useEffect, useMemo, useState } from 'react';
 
 import { PageMain } from '@app/components/PageMain';
 import { applyAction } from '@app/core/game/applyAction';
+import { applyBlock } from '@app/core/game/applyBlock';
 import { CARD_VARIANTS } from '@app/core/game/constants';
+import { createBlock } from '@app/core/game/createBlock';
 import { EGameActionType } from '@app/core/game/enums';
-import { IBoard, IGame, TGameAction } from '@app/core/game/types';
+import { IBoard, IGameBlockChain, IStepBlock, TGameAction } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { Stack, Typography } from '@mui/material';
@@ -23,8 +25,17 @@ export const PeerGame: FC = () => {
   const username = localStorage.getItem(ELocalStorageKey.Username);
   if (!username) throw new Error('username is required');
 
-  const game = useMemo(() => JSON.parse(localStorage.getItem(ELocalStorageKey.Games) ?? '{}')[id] as IGame, [id]);
-  const [board, setBoard] = useState<IBoard>(game.board);
+  const gameBlockchain = useMemo(
+    () => JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}')[id] as IGameBlockChain,
+    [id]
+  );
+  const [board, setBoard] = useState<IBoard>(() => {
+    const board = gameBlockchain.initialBoard;
+    for (const block of gameBlockchain.blocks) {
+      produce(board, (draft) => applyBlock(gameBlockchain, draft, block));
+    }
+    return board;
+  });
   const [peer, setPeer] = useState<Peer | null>(null);
   const [playersConnections, setPlayersConnections] = useState<Record<string, DataConnection>>({});
 
@@ -56,21 +67,22 @@ export const PeerGame: FC = () => {
     if (!peer) return;
     setPlayersConnections((prev) =>
       produce(prev, (draft) => {
-        for (const player of game.players) {
+        for (const player of gameBlockchain.players) {
           const connectionId = getPeerId(player);
+          if (player === username) continue;
           if (draft[connectionId]) continue;
           draft[connectionId] = peer.connect(connectionId);
         }
       })
     );
-  }, [peer, game]);
+  }, [peer, username, gameBlockchain.players]);
 
   useEffect(() => {
-    if (!playersConnections) return;
     const handler = async (data: unknown) => {
       if (typeof data !== 'object') return;
-      const event = data as TGameAction;
-      setBoard((prev) => produce(prev, (draft) => applyAction(draft, event)));
+      const event = data as IStepBlock;
+
+      setBoard((prev) => produce(prev, (draft) => applyBlock(gameBlockchain, draft, event)));
     };
     for (const connection of Object.values(playersConnections)) {
       connection.on('data', handler as (data: unknown) => void);
@@ -81,13 +93,15 @@ export const PeerGame: FC = () => {
         connection.off('data', handler as (data: unknown) => void);
       }
     };
-  }, [playersConnections]);
+  }, [playersConnections, gameBlockchain]);
 
-  const broadcastAction = (action: TGameAction) => {
-    for (const connection of Object.values(playersConnections)) {
-      connection.send(action);
-    }
-    setBoard((prev) => produce(prev, (draft) => applyAction(draft, action)));
+  const broadcastBlock = async (block: IStepBlock) => {
+    await Promise.all(Object.values(playersConnections).map((connection) => connection.send(block)));
+  };
+  const broadcastAction = async (action: TGameAction) => {
+    const block = await createBlock(username, action, gameBlockchain);
+    await broadcastBlock(block);
+    setBoard((prev) => produce(prev, (draft) => applyAction(draft, block.action)));
   };
 
   const pullCardMutation = useMutation({
@@ -107,7 +121,7 @@ export const PeerGame: FC = () => {
         <Typography variant="h1">Peer Game</Typography>
         <Typography variant="h2">Players</Typography>
         <Stack>
-          {game.players.map((player) => (
+          {gameBlockchain.players.map((player) => (
             <Typography key={player}>{player}</Typography>
           ))}
         </Stack>

@@ -39,6 +39,7 @@ export interface IBoard {
 
 export interface IGameBlockChain {
   initialBoard: IBoard;
+  players: string[];
   blocks: IStepBlock[];
 }
 export interface IBaseGameAction {
@@ -50,19 +51,16 @@ export interface IUseCardActionParams extends IBaseGameAction {
   params: TUseSelectedCardParams;
 }
 
-export interface IInitializeGameActionParams extends IBaseGameAction {
-  type: EGameActionType.InitializeGame;
-  params: IGame;
-}
-
 export interface IPullCardActionParams extends IBaseGameAction {
   type: EGameActionType.PullCard;
   params: IPullCardParams;
 }
 
-export type TGameAction = IUseCardActionParams | IInitializeGameActionParams | IPullCardActionParams;
+export type TGameAction = IUseCardActionParams | IPullCardActionParams;
 
-interface IStepBlock {
+export interface IStepBlock {
   username: string;
-  actionParams: TGameAction;
+  action: TGameAction;
+  hash: string;
+  previousHash: string | null;
 }

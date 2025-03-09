@@ -3,11 +3,12 @@ import { FC, useEffect, useState } from 'react';
 import { routes } from '@app/Routes/routes';
 import { PageMain } from '@app/components/PageMain';
 import { createBoard } from '@app/core/game/createBoard';
-import { EGameActionType } from '@app/core/game/enums';
-import { IGame, TGameAction } from '@app/core/game/types';
+import { IGame, IGameBlockChain } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
+import { EPeerEventType } from '@app/core/peer/enums';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { getUsernameFromPeerId } from '@app/core/peer/getUsernameFromPeerId';
+import { TPeerEvent } from '@app/core/peer/types';
 import { Button, Stack, TextField, Typography } from '@mui/material';
 import { produce } from 'immer';
 import Peer, { DataConnection } from 'peerjs';
@@ -49,16 +50,20 @@ export const PeerLobby: FC = () => {
   }, [username]);
 
   useEffect(() => {
-    if (!playersConnections) return;
     const handler = (data: unknown) => {
       if (typeof data !== 'object') return;
-      const event = data as TGameAction;
-      if (event.type === EGameActionType.InitializeGame) {
-        const game = event.params;
+      const event = data as TPeerEvent;
+      if (event.type === EPeerEventType.initializeGame) {
+        const game = event.data;
         navigate(`${routes.game}/${game.id}`);
-        const games = JSON.parse(localStorage.getItem(ELocalStorageKey.Games) ?? '{}');
-        games[game.id] = game;
-        localStorage.setItem(ELocalStorageKey.Games, JSON.stringify(games));
+        const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
+        const gameBlockchain: IGameBlockChain = {
+          initialBoard: game.board,
+          players: game.players,
+          blocks: [],
+        };
+        gameBlockchains[game.id] = gameBlockchain;
+        localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
       }
     };
     for (const connection of Object.values(playersConnections)) {
@@ -72,9 +77,9 @@ export const PeerLobby: FC = () => {
     };
   }, [navigate, playersConnections]);
 
-  const broadcastAction = (action: TGameAction) => {
+  const broadcastEvent = (event: TPeerEvent) => {
     for (const connection of Object.values(playersConnections)) {
-      connection.send(action);
+      connection.send(event);
     }
   };
 
@@ -143,7 +148,7 @@ export const PeerLobby: FC = () => {
           <Button
             onClick={async () => {
               const gameId = uuid();
-              const games = JSON.parse(localStorage.getItem(ELocalStorageKey.Games) ?? '{}');
+              const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
 
               const players = [
                 ...Object.values(playersConnections).map((connection) => getUsernameFromPeerId(connection.peer)),
@@ -155,9 +160,14 @@ export const PeerLobby: FC = () => {
                 createdAt: new Date(),
                 board: createBoard(players),
               };
-              games[gameId] = game;
-              localStorage.setItem(ELocalStorageKey.Games, JSON.stringify(games));
-              broadcastAction({ type: EGameActionType.InitializeGame, params: game });
+              broadcastEvent({ type: EPeerEventType.initializeGame, data: game });
+              const gameBlockchain: IGameBlockChain = {
+                initialBoard: game.board,
+                players,
+                blocks: [],
+              };
+              gameBlockchains[gameId] = gameBlockchain;
+              localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
               navigate(`${routes.game}/${gameId}`);
             }}
           >

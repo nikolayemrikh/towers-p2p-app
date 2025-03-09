@@ -1,5 +1,5 @@
 export const ELocalStorageKey = {
   ThemeModeSetting: 'theme_mode_setting',
   Username: 'username',
-  Games: 'games',
+  GameBlockchains: 'game_blockchains',
 } as const;
