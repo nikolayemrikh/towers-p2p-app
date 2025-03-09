@@ -2,11 +2,11 @@ import { FC, useCallback, useEffect, useState } from 'react';
 
 import { PageMain } from '@app/components/PageMain';
 import { applyAction } from '@app/core/game/applyAction';
-import { applyBlock } from '@app/core/game/applyBlock';
 import { CARD_VARIANTS } from '@app/core/game/constants';
 import { createBlock } from '@app/core/game/createBlock';
 import { EGameActionType } from '@app/core/game/enums';
 import { IBoard, IGameBlockChain, TGameAction } from '@app/core/game/types';
+import { validateBlock } from '@app/core/game/validateBlock';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { EPeerEventType } from '@app/core/peer/enums';
 import { getPeerId } from '@app/core/peer/getPeerId';
@@ -35,7 +35,10 @@ export const PeerGame: FC = () => {
   const [board, setBoard] = useState<IBoard>(() => {
     const board = gameBlockchain.initialBoard;
     for (const block of gameBlockchain.blocks) {
-      produce(board, (draft) => applyBlock(gameBlockchain, draft, block));
+      if (!validateBlock(gameBlockchain, block)) {
+        throw new Error('Invalid block');
+      }
+      produce(board, (draft) => applyAction(draft, block.action));
     }
     return board;
   });
@@ -135,12 +138,21 @@ export const PeerGame: FC = () => {
   useEffect(() => {
     for (const connection of Object.values(playersConnections)) {
       const handler = async (data: unknown) => {
-        console.log('data', data);
         if (typeof data !== 'object') return;
         const event = data as TPeerEvent;
 
         if (event.type === EPeerEventType.action) {
-          setBoard((prev) => produce(prev, (draft) => applyBlock(gameBlockchain, draft, event.data)));
+          const block = event.data;
+          if (!validateBlock(gameBlockchain, block)) {
+            throw new Error('Invalid block');
+          }
+          setBoard((prev) => produce(prev, (draft) => applyAction(draft, block.action)));
+          const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
+          gameBlockchains[id] = {
+            ...gameBlockchain,
+            blocks: [...gameBlockchain.blocks, block],
+          };
+          localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
         } else if (event.type === EPeerEventType.afterConnectionStartedCheck) {
           const receivedLastBlockHash = event.data.lastBlockHash;
 
@@ -159,17 +171,22 @@ export const PeerGame: FC = () => {
         connection.off('data');
       }
     };
-  }, [playersConnections, gameBlockchain]);
+  }, [id, playersConnections, gameBlockchain]);
 
   const broadcastEvent = async (event: TPeerEvent) => {
     await Promise.all(Object.values(playersConnections).map((connection) => connection.send(event)));
   };
   const makeAction = async (action: TGameAction) => {
     const block = await createBlock(username, action, gameBlockchain);
-    console.log('block', block);
 
     await broadcastEvent({ type: EPeerEventType.action, data: block });
     setBoard((prev) => produce(prev, (draft) => applyAction(draft, block.action)));
+    const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
+    gameBlockchains[id] = {
+      ...gameBlockchain,
+      blocks: [...gameBlockchain.blocks, block],
+    };
+    localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
   };
 
   const pullCardMutation = useMutation({
