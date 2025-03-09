@@ -21,6 +21,8 @@ import { Card } from './Card';
 import { Tower } from './Tower';
 import { UserTower } from './UserTower';
 
+const PAGE_PREFIX = 'game';
+
 const getStoredGameBlockchains = (): Record<string, IGameBlockChain> => {
   return JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
 };
@@ -54,7 +56,7 @@ export const PeerGame: FC = () => {
   const [isAllPlayersSynced, setIsAllPlayersSynced] = useState(false);
 
   useEffect(() => {
-    const peer = new Peer(getPeerId(username));
+    const peer = new Peer(getPeerId(PAGE_PREFIX, username));
     peer.once('open', () => {
       setPeer(peer);
     });
@@ -91,7 +93,7 @@ export const PeerGame: FC = () => {
       setPlayersConnections((prev) =>
         produce(prev, (draft) => {
           for (const player of players) {
-            const connectionId = getPeerId(player);
+            const connectionId = getPeerId(PAGE_PREFIX, player);
             if (player === username) continue;
             if (draft[connectionId]) continue;
             const connection = peer.connect(connectionId, { serialization: 'json' });
@@ -165,7 +167,7 @@ export const PeerGame: FC = () => {
 
           setPlayersLastBlockHashes((prev) =>
             produce(prev, (draft) => {
-              draft[getUsernameFromPeerId(connection.peer)] = receivedLastBlockHash;
+              draft[getUsernameFromPeerId(PAGE_PREFIX, connection.peer)] = receivedLastBlockHash;
             })
           );
         }

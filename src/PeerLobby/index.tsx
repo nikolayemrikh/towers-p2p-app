@@ -15,6 +15,8 @@ import { useNavigate } from 'react-router-dom';
 import { P, match } from 'ts-pattern';
 import { v4 as uuid } from 'uuid';
 
+const PAGE_PREFIX = 'lobby';
+
 export const PeerLobby: FC = () => {
   // const { id } = useParams();
   // const [peer, setPeer] = useState<Peer | null>(null);
@@ -26,7 +28,7 @@ export const PeerLobby: FC = () => {
   const [playersConnections, setPlayersConnections] = useState<Record<string, DataConnection>>({});
 
   useEffect(() => {
-    const peer = new Peer(getPeerId(username));
+    const peer = new Peer(getPeerId(PAGE_PREFIX, username));
     setPeer(peer);
 
     peer.on('connection', (connection) => {
@@ -132,7 +134,7 @@ export const PeerLobby: FC = () => {
           .with(P.nonNullable, (peer) => {
             const handleSubmit = () => {
               if (!peerUsername) return;
-              const connection = peer.connect(getPeerId(peerUsername), { serialization: 'json' });
+              const connection = peer.connect(getPeerId(PAGE_PREFIX, peerUsername), { serialization: 'json' });
               connection.once('open', () => {
                 setPlayersConnections((prev) =>
                   produce(prev, (draft) => {
@@ -175,7 +177,9 @@ export const PeerLobby: FC = () => {
               const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
 
               const players = [
-                ...Object.values(playersConnections).map((connection) => getUsernameFromPeerId(connection.peer)),
+                ...Object.values(playersConnections).map((connection) =>
+                  getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
+                ),
                 username,
               ];
               const game: IGame = {
