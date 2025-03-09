@@ -21,7 +21,7 @@ export const PeerLobby: FC = () => {
   const navigate = useNavigate();
   const [username, setUsername] = useState(localStorage.getItem('username') ?? '');
   const [currentUsername, setCurrentUsername] = useState(username);
-  const [peerId, setPeerId] = useState('');
+  const [peerUsername, setPeerUsername] = useState('');
   const [peer, setPeer] = useState<Peer | null>(null);
   const [playersConnections, setPlayersConnections] = useState<Record<string, DataConnection>>({});
 
@@ -119,10 +119,10 @@ export const PeerLobby: FC = () => {
         {peer && (
           <Stack direction="column" gap={2}>
             <Typography variant="body1">Подключиться к игроку</Typography>
-            <TextField value={peerId} onChange={(e) => setPeerId(e.target.value)} />
+            <TextField value={peerUsername} onChange={(e) => setPeerUsername(e.target.value)} />
             <Button
               onClick={() => {
-                const connection = peer.connect(getPeerId(peerId));
+                const connection = peer.connect(getPeerId(peerUsername));
                 setPlayersConnections((prev) =>
                   produce(prev, (draft) => {
                     draft[connection.peer] = connection;
