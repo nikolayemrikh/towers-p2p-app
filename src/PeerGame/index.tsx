@@ -98,7 +98,7 @@ export const PeerGame: FC = () => {
   const broadcastBlock = async (block: IStepBlock) => {
     await Promise.all(Object.values(playersConnections).map((connection) => connection.send(block)));
   };
-  const broadcastAction = async (action: TGameAction) => {
+  const makeAction = async (action: TGameAction) => {
     const block = await createBlock(username, action, gameBlockchain);
     await broadcastBlock(block);
     setBoard((prev) => produce(prev, (draft) => applyAction(draft, block.action)));
@@ -138,7 +138,7 @@ export const PeerGame: FC = () => {
               !!board.openedCardNumberToUse
             }
             onClick={() => {
-              broadcastAction({
+              makeAction({
                 type: EGameActionType.PullCard,
                 params: { currentUsername: username },
               });
@@ -192,7 +192,7 @@ export const PeerGame: FC = () => {
             openedCardToUse={board.openedCardNumberToUse ?? null}
             pulledCardToChange={board.pulledCardNumberToChange ?? null}
             makeAction={(action) => {
-              broadcastAction(action);
+              makeAction(action);
             }}
           />
           {Object.entries(board.towers)
