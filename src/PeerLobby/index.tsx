@@ -1,5 +1,3 @@
-import { FC, useEffect, useState } from 'react';
-
 import { routes } from '@app/Routes/routes';
 import { PageMain } from '@app/components/PageMain';
 import { createBoard } from '@app/core/game/createBoard';
@@ -12,7 +10,9 @@ import { TPeerEvent } from '@app/core/peer/types';
 import { Button, Stack, TextField, Typography } from '@mui/material';
 import { produce } from 'immer';
 import Peer, { DataConnection } from 'peerjs';
+import { FC, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { P, match } from 'ts-pattern';
 import { v4 as uuid } from 'uuid';
 
 export const PeerLobby: FC = () => {
@@ -116,26 +116,36 @@ export const PeerLobby: FC = () => {
           </Stack>
         )}
 
-        {peer && (
-          <Stack direction="column" gap={2}>
-            <Typography variant="body1">Подключиться к игроку</Typography>
-            <TextField value={peerUsername} onChange={(e) => setPeerUsername(e.target.value)} />
-            <Button
-              onClick={() => {
-                const connection = peer.connect(getPeerId(peerUsername));
-                connection.once('open', () => {
-                  setPlayersConnections((prev) =>
-                    produce(prev, (draft) => {
-                      draft[connection.peer] = connection;
-                    })
-                  );
-                });
-              }}
-            >
-              Подключиться
-            </Button>
-          </Stack>
-        )}
+        {match(peer)
+          .with(P.nonNullable, (peer) => {
+            const handleSubmit = () => {
+              if (!peerUsername) return;
+              const connection = peer.connect(getPeerId(peerUsername));
+              connection.once('open', () => {
+                setPlayersConnections((prev) =>
+                  produce(prev, (draft) => {
+                    draft[connection.peer] = connection;
+                  })
+                );
+              });
+            };
+            return (
+              <Stack
+                direction="column"
+                gap={2}
+                component="form"
+                onSubmit={(evt) => {
+                  evt.preventDefault();
+                  handleSubmit();
+                }}
+              >
+                <Typography variant="body1">Подключиться к игроку</Typography>
+                <TextField value={peerUsername} onChange={(e) => setPeerUsername(e.target.value)} />
+                <Button type="submit">Подключиться</Button>
+              </Stack>
+            );
+          })
+          .otherwise(() => null)}
 
         <Stack direction="column" gap={2}>
           <Typography variant="body1">Подключенные игроки</Typography>
