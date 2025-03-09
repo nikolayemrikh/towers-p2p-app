@@ -10,18 +10,20 @@ import { IBoard, IGameBlockChain, TGameAction } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { EPeerEventType } from '@app/core/peer/enums';
 import { getPeerId } from '@app/core/peer/getPeerId';
+import { getUsernameFromPeerId } from '@app/core/peer/getUsernameFromPeerId';
 import { TPeerEvent } from '@app/core/peer/types';
 import { Stack, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { produce } from 'immer';
 import { DataConnection, Peer } from 'peerjs';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { Card } from './Card';
 import { Tower } from './Tower';
 import { UserTower } from './UserTower';
 
 export const PeerGame: FC = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   if (!id) throw new Error('id is required');
 
   const username = localStorage.getItem(ELocalStorageKey.Username);
@@ -40,6 +42,11 @@ export const PeerGame: FC = () => {
   });
   const [peer, setPeer] = useState<Peer | null>(null);
   const [playersConnections, setPlayersConnections] = useState<Record<string, DataConnection>>({});
+  const [playersLastBlockHashes, setPlayersLastBlockHashes] = useState<Record<string, string | undefined>>({});
+  const isAllPlayersConnected = useMemo(
+    () => Object.keys(playersConnections).length + 1 === gameBlockchain.players.length,
+    [playersConnections, gameBlockchain.players]
+  );
 
   useEffect(() => {
     const peer = new Peer(getPeerId(username));
@@ -73,31 +80,64 @@ export const PeerGame: FC = () => {
           const connectionId = getPeerId(player);
           if (player === username) continue;
           if (draft[connectionId]) continue;
-          draft[connectionId] = peer.connect(connectionId);
+          const connection = peer.connect(connectionId);
+          draft[connectionId] = connection;
+          connection.once('open', () => {
+            connection.send({
+              type: EPeerEventType.afterConnectionStartedCheck,
+              data: {
+                lastBlock: gameBlockchain.blocks[gameBlockchain.blocks.length - 1],
+              },
+            });
+          });
         }
       })
     );
-  }, [peer, username, gameBlockchain.players]);
+  }, [peer, username, gameBlockchain.players, gameBlockchain.blocks]);
 
   useEffect(() => {
-    const handler = async (data: unknown) => {
-      if (typeof data !== 'object') return;
-      const event = data as TPeerEvent;
-
-      if (event.type === EPeerEventType.action) {
-        setBoard((prev) => produce(prev, (draft) => applyBlock(gameBlockchain, draft, event.data)));
-      }
-    };
     for (const connection of Object.values(playersConnections)) {
+      const handler = async (data: unknown) => {
+        console.log(data);
+
+        if (typeof data !== 'object') return;
+        const event = data as TPeerEvent;
+
+        if (event.type === EPeerEventType.action) {
+          setBoard((prev) => produce(prev, (draft) => applyBlock(gameBlockchain, draft, event.data)));
+        } else if (event.type === EPeerEventType.afterConnectionStartedCheck) {
+          const ownLastBlock = gameBlockchain.blocks[gameBlockchain.blocks.length - 1];
+          const receivedLastBlockHash = event.data.lastBlockHash;
+
+          if (ownLastBlock?.hash !== receivedLastBlockHash) {
+            setPlayersLastBlockHashes((prev) =>
+              produce(prev, (draft) => {
+                draft[getUsernameFromPeerId(connection.peer)] = receivedLastBlockHash;
+              })
+            );
+          }
+        }
+      };
       connection.on('data', handler as (data: unknown) => void);
     }
 
     return () => {
       for (const connection of Object.values(playersConnections)) {
-        connection.off('data', handler as (data: unknown) => void);
+        connection.off('data');
       }
     };
   }, [playersConnections, gameBlockchain]);
+
+  useEffect(() => {
+    if (!isAllPlayersConnected) return;
+    const isAllPlayersLastBlockHashesEqual = Object.entries(playersLastBlockHashes).every(
+      ([username, hash]) => hash === playersLastBlockHashes[username]
+    );
+
+    if (!isAllPlayersLastBlockHashesEqual) {
+      navigate('/');
+    }
+  }, [isAllPlayersConnected, playersLastBlockHashes, navigate]);
 
   const broadcastEvent = async (event: TPeerEvent) => {
     await Promise.all(Object.values(playersConnections).map((connection) => connection.send(event)));

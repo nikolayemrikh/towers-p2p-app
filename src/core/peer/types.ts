@@ -16,4 +16,13 @@ export interface IActionEvent extends IPeerBaseEvent {
   data: IStepBlock;
 }
 
-export type TPeerEvent = IInitializeGameEvent | IActionEvent;
+export interface IAfterConnectionStartedCheckEventData {
+  lastBlockHash: string | undefined;
+}
+
+export interface IAfterConnectionStartedCheckEvent extends IPeerBaseEvent {
+  type: EPeerEventType.afterConnectionStartedCheck;
+  data: IAfterConnectionStartedCheckEventData;
+}
+
+export type TPeerEvent = IInitializeGameEvent | IActionEvent | IAfterConnectionStartedCheckEvent;
