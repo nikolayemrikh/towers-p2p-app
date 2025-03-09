@@ -6,7 +6,7 @@ import { applyBlock } from '@app/core/game/applyBlock';
 import { CARD_VARIANTS } from '@app/core/game/constants';
 import { createBlock } from '@app/core/game/createBlock';
 import { EGameActionType } from '@app/core/game/enums';
-import { IBoard, IGameBlockChain, IStepBlock, TGameAction } from '@app/core/game/types';
+import { IBoard, IGameBlockChain, TGameAction } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { EPeerEventType } from '@app/core/peer/enums';
 import { getPeerId } from '@app/core/peer/getPeerId';
@@ -99,12 +99,12 @@ export const PeerGame: FC = () => {
     };
   }, [playersConnections, gameBlockchain]);
 
-  const broadcastBlock = async (block: IStepBlock) => {
-    await Promise.all(Object.values(playersConnections).map((connection) => connection.send(block)));
+  const broadcastEvent = async (event: TPeerEvent) => {
+    await Promise.all(Object.values(playersConnections).map((connection) => connection.send(event)));
   };
   const makeAction = async (action: TGameAction) => {
     const block = await createBlock(username, action, gameBlockchain);
-    await broadcastBlock(block);
+    await broadcastEvent({ type: EPeerEventType.action, data: block });
     setBoard((prev) => produce(prev, (draft) => applyAction(draft, block.action)));
   };
 
