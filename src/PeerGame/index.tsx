@@ -8,7 +8,9 @@ import { createBlock } from '@app/core/game/createBlock';
 import { EGameActionType } from '@app/core/game/enums';
 import { IBoard, IGameBlockChain, IStepBlock, TGameAction } from '@app/core/game/types';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
+import { EPeerEventType } from '@app/core/peer/enums';
 import { getPeerId } from '@app/core/peer/getPeerId';
+import { TPeerEvent } from '@app/core/peer/types';
 import { Stack, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { produce } from 'immer';
@@ -80,9 +82,11 @@ export const PeerGame: FC = () => {
   useEffect(() => {
     const handler = async (data: unknown) => {
       if (typeof data !== 'object') return;
-      const event = data as IStepBlock;
+      const event = data as TPeerEvent;
 
-      setBoard((prev) => produce(prev, (draft) => applyBlock(gameBlockchain, draft, event)));
+      if (event.type === EPeerEventType.action) {
+        setBoard((prev) => produce(prev, (draft) => applyBlock(gameBlockchain, draft, event.data)));
+      }
     };
     for (const connection of Object.values(playersConnections)) {
       connection.on('data', handler as (data: unknown) => void);

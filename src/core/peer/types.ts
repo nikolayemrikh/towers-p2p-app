@@ -1,4 +1,4 @@
-import { IGame, TGameAction } from '../game/types';
+import { IGame, IStepBlock } from '../game/types';
 import { EPeerEventType } from './enums';
 
 export interface IPeerBaseEvent {
@@ -13,7 +13,7 @@ export interface IInitializeGameEvent extends IPeerBaseEvent {
 
 export interface IActionEvent extends IPeerBaseEvent {
   type: EPeerEventType.action;
-  data: TGameAction;
+  data: IStepBlock;
 }
 
 export type TPeerEvent = IInitializeGameEvent | IActionEvent;
