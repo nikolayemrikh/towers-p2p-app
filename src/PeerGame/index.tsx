@@ -1,4 +1,4 @@
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useEffect, useMemo, useState } from 'react';
 
 import { PageMain } from '@app/components/PageMain';
 import { applyAction } from '@app/core/game/applyAction';
@@ -104,27 +104,20 @@ export const PeerGame: FC = () => {
     }, 1000);
   }, [peer, username, players]);
 
-  const checkAllPlayersLastBlockHashes = useCallback(async () => {
+  useEffect(() => {
     const gameBlockchain = getStoredGameBlockchains()[id];
     const ownLastBlock = gameBlockchain.blocks[gameBlockchain.blocks.length - 1];
-    const isAllPlayersLastBlockHashesEqual = Object.values(playersLastBlockHashes).every(
-      (hash) => hash === ownLastBlock?.hash
-    );
+    const isAllPlayersLastBlockHashesEqual =
+      gameBlockchain.players.length === Object.keys(playersLastBlockHashes).length + 1 &&
+      Object.values(playersLastBlockHashes).every((hash) => hash === ownLastBlock?.hash);
     setIsAllPlayersSynced(isAllPlayersLastBlockHashesEqual);
-
-    if (!isAllPlayersLastBlockHashesEqual) {
-      navigate('/');
-    }
-  }, [id, playersLastBlockHashes, navigate]);
+  }, [id, playersLastBlockHashes]);
 
   useEffect(() => {
     if (!Object.keys(playersConnections).length) return;
 
-    let openedConnections = 0;
-
     for (const connection of Object.values(playersConnections)) {
       connection.once('open', async () => {
-        openedConnections++;
         const gameBlockchain = getStoredGameBlockchains()[id];
         await connection.send({
           type: EPeerEventType.afterConnectionStartedCheck,
@@ -132,9 +125,6 @@ export const PeerGame: FC = () => {
             lastBlock: gameBlockchain.blocks[gameBlockchain.blocks.length - 1],
           },
         });
-        if (openedConnections === Object.keys(playersConnections).length) {
-          await checkAllPlayersLastBlockHashes();
-        }
       });
       connection.once('close', () => {
         setPlayersConnections((prev) =>
@@ -142,10 +132,15 @@ export const PeerGame: FC = () => {
             delete draft[connection.peer];
           })
         );
+        setPlayersLastBlockHashes((prev) =>
+          produce(prev, (draft) => {
+            delete draft[getUsernameFromPeerId(PAGE_PREFIX, connection.peer)];
+          })
+        );
         setIsAllPlayersSynced(false);
       });
     }
-  }, [id, playersConnections, checkAllPlayersLastBlockHashes]);
+  }, [id, playersConnections]);
 
   useEffect(() => {
     for (const connection of Object.values(playersConnections)) {
@@ -162,6 +157,13 @@ export const PeerGame: FC = () => {
           const gameBlockchains = getStoredGameBlockchains();
           gameBlockchains[id].blocks.push(block);
           localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
+
+          await connection.send({
+            type: EPeerEventType.afterConnectionStartedCheck,
+            data: {
+              lastBlock: gameBlockchain.blocks[gameBlockchain.blocks.length - 1],
+            },
+          });
         } else if (event.type === EPeerEventType.afterConnectionStartedCheck) {
           const receivedLastBlockHash = event.data.lastBlockHash;
 
@@ -189,6 +191,7 @@ export const PeerGame: FC = () => {
     const gameBlockchain = getStoredGameBlockchains()[id];
     const block = await createBlock(username, action, gameBlockchain);
 
+    setIsAllPlayersSynced(false);
     await broadcastEvent({ type: EPeerEventType.action, data: block });
     setBoard((prev) => produce(prev, (draft) => applyAction(draft, block.action)));
     const gameBlockchains = getStoredGameBlockchains();
@@ -218,13 +221,13 @@ export const PeerGame: FC = () => {
           ))}
         </Stack>
       </Stack>
-      {!isAllPlayersSynced && <div>Waiting for all players to join...</div>}
-      {isAllPlayersSynced && (
+      {Object.keys(playersConnections).length === players.length - 1 ? (
         <div style={{ height: '100%', padding: '16px' }}>
           <div>
             <div>Deck ({board.closedCardNumbers.length})</div>
             <button
               disabled={
+                !isAllPlayersSynced ||
                 board.turnUsername !== username ||
                 pullCardMutation.isPending ||
                 !board.closedCardNumbers.length ||
@@ -296,6 +299,8 @@ export const PeerGame: FC = () => {
               ))}
           </Stack>
         </div>
+      ) : (
+        <div>Waiting for all players to join...</div>
       )}
     </PageMain>
   );
