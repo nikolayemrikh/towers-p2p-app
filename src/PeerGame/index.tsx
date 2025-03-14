@@ -91,19 +91,18 @@ export const PeerGame: FC = () => {
 
   useEffect(() => {
     if (!peer) return;
-    setTimeout(() => {
-      setPlayersConnections((prev) =>
-        produce(prev, (draft) => {
-          for (const player of players) {
-            const connectionId = getPeerId(PAGE_PREFIX, player);
-            if (player === username) continue;
-            if (draft[connectionId]) continue;
-            const connection = peer.connect(connectionId, { serialization: 'json' });
-            draft[connectionId] = connection;
-          }
-        })
-      );
-    }, 1000);
+
+    setPlayersConnections((prev) =>
+      produce(prev, (draft) => {
+        for (const player of players) {
+          const connectionId = getPeerId(PAGE_PREFIX, player);
+          if (player === username) continue;
+          if (draft[connectionId]) continue;
+          const connection = peer.connect(connectionId, { serialization: 'json' });
+          draft[connectionId] = connection;
+        }
+      })
+    );
   }, [peer, username, players]);
 
   useEffect(() => {
