@@ -1,3 +1,4 @@
+import { IChangeCardToPulledParams } from './actions/changeCardToPulled/types';
 import { IPullCardParams } from './actions/pullCard/types';
 import { TUseSelectedCardParams } from './actions/useSelectedCard/types';
 import { EGameActionType, EPower } from './enums';
@@ -56,7 +57,12 @@ export interface IPullCardActionParams extends IBaseGameAction {
   params: IPullCardParams;
 }
 
-export type TGameAction = IUseCardActionParams | IPullCardActionParams;
+export interface IChangeCardToPulledActionParams extends IBaseGameAction {
+  type: EGameActionType.ChangeCardToPulled;
+  params: IChangeCardToPulledParams;
+}
+
+export type TGameAction = IUseCardActionParams | IPullCardActionParams | IChangeCardToPulledActionParams;
 
 export interface IStepBlock {
   username: string;

@@ -44,8 +44,7 @@ export const UserTower: FC<{
   const handleCardClick = async (index: number, isActionAvailable: boolean): Promise<void> => {
     if (!isActionAvailable) return;
     if (pulledCardToChange) {
-      // @TODO
-      // changeCardToPulledMutation.mutate(index);
+      makeAction({ type: EGameActionType.ChangeCardToPulled, params: { index, currentUsername: userId } });
       return;
     }
     if (!openedCardToUse) throw new Error('Can not make an action when there is no opened card to use');

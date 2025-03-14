@@ -1,3 +1,4 @@
+import { changeCardToPulled } from '../actions/changeCardToPulled';
 import { pullCard } from '../actions/pullCard';
 import { useSelectedCard } from '../actions/useSelectedCard';
 import { EGameActionType } from '../enums';
@@ -14,6 +15,10 @@ export const applyAction = (board: IBoard, action: TGameAction): void => {
     }
     case EGameActionType.PullCard: {
       pullCard(action.params, board);
+      break;
+    }
+    case EGameActionType.ChangeCardToPulled: {
+      changeCardToPulled(action.params, board);
       break;
     }
   }
