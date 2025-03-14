@@ -125,7 +125,7 @@ export const PeerGame: FC = () => {
         await connection.send({
           type: EPeerEventType.afterConnectionStartedCheck,
           data: {
-            lastBlockHash: gameBlockchain.blocks[gameBlockchain.blocks.length - 1].hash,
+            lastBlockHash: gameBlockchain.blocks[gameBlockchain.blocks.length - 1]?.hash,
           },
         } satisfies IAfterConnectionStartedCheckEvent);
       });
@@ -164,7 +164,7 @@ export const PeerGame: FC = () => {
           await connection.send({
             type: EPeerEventType.afterConnectionStartedCheck,
             data: {
-              lastBlockHash: gameBlockchain.blocks[gameBlockchain.blocks.length - 1].hash,
+              lastBlockHash: gameBlockchains[id].blocks[gameBlockchains[id].blocks.length - 1].hash,
             },
           } satisfies IAfterConnectionStartedCheckEvent);
         } else if (event.type === EPeerEventType.afterConnectionStartedCheck) {
