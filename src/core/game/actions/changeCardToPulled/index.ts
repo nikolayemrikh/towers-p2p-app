@@ -17,11 +17,12 @@ export const changeCardToPulled = async (params: IChangeCardToPulledParams, boar
   if (pulledCardNumberToChange === null)
     throw new Error('Can not chage card when "pulledCardNumberToChange" is not set');
 
+  const cardToOpenNumber = cardTower.cards[index].number;
   cardTower.cards[index].number = pulledCardNumberToChange;
   cardTower.cards[index].isProtected = false;
 
   board.pulledCardNumberToChange = null;
-  board.openCardNumbers.push(pulledCardNumberToChange);
+  board.openCardNumbers.push(cardToOpenNumber);
 
   await passTurnToNextUser(board, currentUsername);
 };
