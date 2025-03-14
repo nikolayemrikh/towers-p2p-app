@@ -7,9 +7,11 @@ export const passTurnToNextUser = async (board: IBoard, currentUsername: string)
   //   .eq('board_id', boardId);
   // if (cardTowersError) throw new Error(cardTowersError.message);
 
-  const nextUserCardTower =
-    Object.entries(board.towers).find(([username, tower]) => username !== currentUsername && tower.cards.length > 0) ??
-    Object.entries(board.towers)[0];
+  const players = Object.keys(board.towers);
 
-  board.turnUsername = nextUserCardTower[0];
+  const currentPlayerIndex = players.findIndex((player) => player === currentUsername);
+
+  const nextPlayerIndex = (currentPlayerIndex + 1) % players.length;
+
+  board.turnUsername = players[nextPlayerIndex];
 };

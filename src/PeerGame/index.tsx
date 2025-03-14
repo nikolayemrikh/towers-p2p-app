@@ -11,7 +11,7 @@ import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { EPeerEventType } from '@app/core/peer/enums';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { getUsernameFromPeerId } from '@app/core/peer/getUsernameFromPeerId';
-import { TPeerEvent } from '@app/core/peer/types';
+import { IAfterConnectionStartedCheckEvent, TPeerEvent } from '@app/core/peer/types';
 import { Stack, Typography } from '@mui/material';
 import { useMutation } from '@tanstack/react-query';
 import { produce } from 'immer';
@@ -54,6 +54,8 @@ export const PeerGame: FC = () => {
   const [playersConnections, setPlayersConnections] = useState<Record<string, DataConnection>>({});
   const [playersLastBlockHashes, setPlayersLastBlockHashes] = useState<Record<string, string | undefined>>({});
   const [isAllPlayersSynced, setIsAllPlayersSynced] = useState(false);
+
+  const isAllPlayersConnected = Object.keys(playersLastBlockHashes).length === players.length - 1;
 
   useEffect(() => {
     const peer = new Peer(getPeerId(PAGE_PREFIX, username));
@@ -110,6 +112,7 @@ export const PeerGame: FC = () => {
     const isAllPlayersLastBlockHashesEqual =
       gameBlockchain.players.length === Object.keys(playersLastBlockHashes).length + 1 &&
       Object.values(playersLastBlockHashes).every((hash) => hash === ownLastBlock?.hash);
+
     setIsAllPlayersSynced(isAllPlayersLastBlockHashesEqual);
   }, [id, playersLastBlockHashes]);
 
@@ -122,9 +125,9 @@ export const PeerGame: FC = () => {
         await connection.send({
           type: EPeerEventType.afterConnectionStartedCheck,
           data: {
-            lastBlock: gameBlockchain.blocks[gameBlockchain.blocks.length - 1],
+            lastBlockHash: gameBlockchain.blocks[gameBlockchain.blocks.length - 1].hash,
           },
-        });
+        } satisfies IAfterConnectionStartedCheckEvent);
       });
       connection.once('close', () => {
         setPlayersConnections((prev) =>
@@ -161,9 +164,9 @@ export const PeerGame: FC = () => {
           await connection.send({
             type: EPeerEventType.afterConnectionStartedCheck,
             data: {
-              lastBlock: gameBlockchain.blocks[gameBlockchain.blocks.length - 1],
+              lastBlockHash: gameBlockchain.blocks[gameBlockchain.blocks.length - 1].hash,
             },
-          });
+          } satisfies IAfterConnectionStartedCheckEvent);
         } else if (event.type === EPeerEventType.afterConnectionStartedCheck) {
           const receivedLastBlockHash = event.data.lastBlockHash;
 
@@ -221,7 +224,7 @@ export const PeerGame: FC = () => {
           ))}
         </Stack>
       </Stack>
-      {Object.keys(playersConnections).length === players.length - 1 ? (
+      {isAllPlayersConnected ? (
         <div style={{ height: '100%', padding: '16px' }}>
           <div>
             <div>Deck ({board.closedCardNumbers.length})</div>

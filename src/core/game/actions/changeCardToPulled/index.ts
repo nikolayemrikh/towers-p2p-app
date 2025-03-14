@@ -10,11 +10,12 @@ export const changeCardToPulled = async (params: IChangeCardToPulledParams, boar
   const cardTower = board.towers[board.turnUsername];
   if (!cardTower) throw new Error('Card tower for current user not found');
 
-  if (board.openedCardNumberToUse)
+  if (board.openedCardNumberToUse !== null)
     throw new Error('Can not change card to pulled from the deck when opened card number has already been set');
 
   const pulledCardNumberToChange = board.pulledCardNumberToChange;
-  if (!pulledCardNumberToChange) throw new Error('Can not chage card when "pulledCardNumberToChange" is not set');
+  if (pulledCardNumberToChange === null)
+    throw new Error('Can not chage card when "pulledCardNumberToChange" is not set');
 
   cardTower.cards[index].number = pulledCardNumberToChange;
   cardTower.cards[index].isProtected = false;
