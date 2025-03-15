@@ -4,48 +4,20 @@ import { EThemeMode } from './ThemeModeSettingContext/types';
 const lightPalette: PaletteOptions = {
   mode: 'light',
   primary: {
-    main: '#78909c', // stone grey
-    light: '#a7c0cd',
-    dark: '#4b636e',
-    contrastText: '#ffffff',
+    main: '#ff9800',
   },
   secondary: {
-    main: '#ffd54f', // yellow
-    light: '#ffff81',
-    dark: '#c8a415',
-    contrastText: '#000000',
-  },
-  background: {
-    default: '#f5f5f5',
-    paper: '#ffffff',
-  },
-  text: {
-    primary: '#263238',
-    secondary: '#455a64',
+    main: '#665229',
   },
 };
 
 const darkPalette: PaletteOptions = {
   mode: 'dark',
   primary: {
-    main: '#78909c', // stone grey
-    light: '#a7c0cd',
-    dark: '#4b636e',
-    contrastText: '#ffffff',
+    main: '#ff9800',
   },
   secondary: {
-    main: '#ffd54f', // yellow
-    light: '#ffff81',
-    dark: '#c8a415',
-    contrastText: '#000000',
-  },
-  background: {
-    default: '#263238',
-    paper: '#37474f',
-  },
-  text: {
-    primary: '#ffffff',
-    secondary: '#b0bec5',
+    main: '#665229',
   },
 };
 
