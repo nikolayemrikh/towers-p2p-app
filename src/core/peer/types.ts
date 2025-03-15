@@ -25,4 +25,4 @@ export interface IAfterConnectionStartedCheckEvent extends IPeerBaseEvent {
   data: IAfterConnectionStartedCheckEventData;
 }
 
-export type TPeerEvent = IInitializeGameEvent | IActionEvent | IAfterConnectionStartedCheckEvent;
+export type TPeerEvent = IInitializeGameEvent | IActionEvent | IAfterConnectionStartedCheckEvent | ICallRpcEvent;

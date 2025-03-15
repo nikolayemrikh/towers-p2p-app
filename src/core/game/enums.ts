@@ -13,4 +13,5 @@ export enum EGameActionType {
   UseCard = 'use_card',
   PullCard = 'pull_card',
   ChangeCardToPulled = 'change_card_to_pulled',
+  SelectOpenedCard = 'select_opened_card',
 }

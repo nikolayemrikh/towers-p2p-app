@@ -2,6 +2,7 @@ import { FC, useEffect, useMemo, useState } from 'react';
 
 import { PageMain } from '@app/components/PageMain';
 import { applyAction } from '@app/core/game/applyAction';
+import { checkIsUserCardAvailableForInitialAction } from '@app/core/game/common/checkIsUserCardAvailableForInitialAction';
 import { CARD_VARIANTS } from '@app/core/game/constants';
 import { createBlock } from '@app/core/game/createBlock';
 import { EGameActionType } from '@app/core/game/enums';
@@ -13,7 +14,6 @@ import { getPeerId } from '@app/core/peer/getPeerId';
 import { getUsernameFromPeerId } from '@app/core/peer/getUsernameFromPeerId';
 import { IAfterConnectionStartedCheckEvent, TPeerEvent } from '@app/core/peer/types';
 import { Stack, Typography } from '@mui/material';
-import { useMutation } from '@tanstack/react-query';
 import { produce } from 'immer';
 import { DataConnection, Peer } from 'peerjs';
 import { useNavigate, useParams } from 'react-router-dom';
@@ -92,17 +92,19 @@ export const PeerGame: FC = () => {
   useEffect(() => {
     if (!peer) return;
 
-    setPlayersConnections((prev) =>
-      produce(prev, (draft) => {
-        for (const player of players) {
-          const connectionId = getPeerId(PAGE_PREFIX, player);
-          if (player === username) continue;
-          if (draft[connectionId]) continue;
-          const connection = peer.connect(connectionId, { serialization: 'json' });
-          draft[connectionId] = connection;
-        }
-      })
-    );
+    window.setTimeout(() => {
+      setPlayersConnections((prev) =>
+        produce(prev, (draft) => {
+          for (const player of players) {
+            const connectionId = getPeerId(PAGE_PREFIX, player);
+            if (player === username) continue;
+            if (draft[connectionId]) continue;
+            const connection = peer.connect(connectionId, { serialization: 'json' });
+            draft[connectionId] = connection;
+          }
+        })
+      );
+    }, 1000);
   }, [peer, username, players]);
 
   useEffect(() => {
@@ -147,6 +149,8 @@ export const PeerGame: FC = () => {
   useEffect(() => {
     for (const connection of Object.values(playersConnections)) {
       const handler = async (data: unknown) => {
+        console.log('data', data);
+
         if (typeof data !== 'object') return;
         const event = data as TPeerEvent;
         const gameBlockchain = getStoredGameBlockchains()[id];
@@ -159,6 +163,8 @@ export const PeerGame: FC = () => {
           const gameBlockchains = getStoredGameBlockchains();
           gameBlockchains[id].blocks.push(block);
           localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
+
+          console.log(gameBlockchains[id]);
 
           await connection.send({
             type: EPeerEventType.afterConnectionStartedCheck,
@@ -201,17 +207,6 @@ export const PeerGame: FC = () => {
     localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
   };
 
-  const pullCardMutation = useMutation({
-    mutationFn: () => {
-      return Promise.resolve();
-    },
-  });
-  const selectOpenedCardMutation = useMutation({
-    mutationFn: () => {
-      return Promise.resolve();
-    },
-  });
-
   return (
     <PageMain>
       <Stack>
@@ -231,7 +226,6 @@ export const PeerGame: FC = () => {
               disabled={
                 !isAllPlayersSynced ||
                 board.turnUsername !== username ||
-                pullCardMutation.isPending ||
                 !board.closedCardNumbers.length ||
                 !!board.pulledCardNumberToChange ||
                 !!board.openedCardNumberToUse
@@ -260,12 +254,26 @@ export const PeerGame: FC = () => {
                 key={openedCardNumber}
                 number={openedCardNumber}
                 power={CARD_VARIANTS.find((card) => card.number === openedCardNumber)!.power}
-                isActionAvailable={false}
+                isActionAvailable={
+                  isAllPlayersSynced &&
+                  username === board.turnUsername &&
+                  !board.openedCardNumberToUse &&
+                  !board.pulledCardNumberToChange &&
+                  board.towers[username].cards.some((card, index) =>
+                    checkIsUserCardAvailableForInitialAction(
+                      index,
+                      card.isProtected,
+                      CARD_VARIANTS.find((card) => card.number === openedCardNumber)!.power,
+                      board.towers[username].cards
+                    )
+                  )
+                }
                 isProtected={false}
                 onClick={() => {
-                  if (board.openedCardNumberToUse) return;
-                  if (selectOpenedCardMutation.isPending) return;
-                  selectOpenedCardMutation.mutate({ boardId: board.id, cardNumber: openedCardNumber });
+                  makeAction({
+                    type: EGameActionType.SelectOpenedCard,
+                    params: { currentUsername: username, cardNumber: openedCardNumber },
+                  });
                 }}
               />
             ))}

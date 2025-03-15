@@ -5,8 +5,6 @@ export const pullCard = async (params: IPullCardParams, board: IBoard): Promise<
   const { currentUsername } = params;
   if (board.turnUsername !== currentUsername) throw new Error('Turn user is not current user');
 
-  if (board.turnUsername !== currentUsername) throw new Error('Turn user is not current user');
-
   if (board.openedCardNumberToUse) throw new Error('Can not pull card when opened card number has already been set');
   if (board.pulledCardNumberToChange)
     throw new Error('Can not pull card when card has already been pulled from the deck');
