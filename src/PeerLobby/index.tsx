@@ -7,7 +7,7 @@ import { EPeerEventType } from '@app/core/peer/enums';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { getUsernameFromPeerId } from '@app/core/peer/getUsernameFromPeerId';
 import { TPeerEvent } from '@app/core/peer/types';
-import { Button, Stack, TextField, Typography } from '@mui/material';
+import { Button, Card, Stack, TextField, Typography } from '@mui/material';
 import { produce } from 'immer';
 import Peer, { DataConnection } from 'peerjs';
 import { FC, useEffect, useState } from 'react';
@@ -87,121 +87,126 @@ export const PeerLobby: FC = () => {
 
   return (
     <PageMain>
-      <Stack direction="column" gap={2}>
-        <Typography variant="h1">Peer lobby</Typography>
+      <Stack direction="row" justifyContent="center">
+        <Card sx={{ padding: 4, flexBasis: 500 }}>
+          <Stack direction="column" gap={2}>
+            <Typography variant="h1">Peer lobby</Typography>
 
-        {match(username)
-          .when(
-            (u) => !!u,
-            () => (
-              <Stack direction="column" gap={2}>
-                <Typography variant="body1">Юзернейм: {username}</Typography>
-                <Button
-                  onClick={() => {
-                    localStorage.removeItem(ELocalStorageKey.Username);
-                    setUsername('');
-                  }}
-                >
-                  Сменить юзернейм
-                </Button>
-              </Stack>
-            )
-          )
-          .otherwise(() => {
-            const handleSubmit = () => {
-              localStorage.setItem(ELocalStorageKey.Username, currentUsername);
-              setUsername(currentUsername);
-              setCurrentUsername('');
-            };
-            return (
-              <Stack
-                direction="column"
-                gap={2}
-                component="form"
-                onSubmit={(evt) => {
-                  evt.preventDefault();
-                  handleSubmit();
-                }}
-              >
-                <Typography variant="body1">Придумайте юзернейм</Typography>
-                <TextField value={currentUsername} onChange={(e) => setCurrentUsername(e.target.value)} />
-                <Button type="submit">Сохранить</Button>
-              </Stack>
-            );
-          })}
-
-        {match(peer)
-          .with(P.nonNullable, (peer) => {
-            const handleSubmit = () => {
-              if (!peerUsername) return;
-              const connection = peer.connect(getPeerId(PAGE_PREFIX, peerUsername), { serialization: 'json' });
-              connection.once('open', () => {
-                setPlayersConnections((prev) =>
-                  produce(prev, (draft) => {
-                    draft[connection.peer] = connection;
-                  })
+            {match(username)
+              .when(
+                (u) => !!u,
+                () => (
+                  <Stack direction="column" gap={2}>
+                    <Typography variant="body1">Юзернейм: {username}</Typography>
+                    <Button
+                      onClick={() => {
+                        localStorage.removeItem(ELocalStorageKey.Username);
+                        setUsername('');
+                      }}
+                    >
+                      Сменить юзернейм
+                    </Button>
+                  </Stack>
+                )
+              )
+              .otherwise(() => {
+                const handleSubmit = () => {
+                  localStorage.setItem(ELocalStorageKey.Username, currentUsername);
+                  setUsername(currentUsername);
+                  setCurrentUsername('');
+                };
+                return (
+                  <Stack
+                    direction="column"
+                    gap={2}
+                    component="form"
+                    onSubmit={(evt) => {
+                      evt.preventDefault();
+                      handleSubmit();
+                    }}
+                  >
+                    <Typography variant="body1">Придумайте юзернейм</Typography>
+                    <TextField value={currentUsername} onChange={(e) => setCurrentUsername(e.target.value)} />
+                    <Button type="submit">Сохранить</Button>
+                  </Stack>
                 );
-              });
-            };
-            return (
-              <Stack
-                direction="column"
-                gap={2}
-                component="form"
-                onSubmit={(evt) => {
-                  evt.preventDefault();
-                  handleSubmit();
+              })}
+
+            {match(peer)
+              .with(P.nonNullable, (peer) => {
+                const handleSubmit = () => {
+                  if (!peerUsername) return;
+                  const connection = peer.connect(getPeerId(PAGE_PREFIX, peerUsername), { serialization: 'json' });
+                  connection.once('open', () => {
+                    setPlayersConnections((prev) =>
+                      produce(prev, (draft) => {
+                        draft[connection.peer] = connection;
+                      })
+                    );
+                  });
+                };
+                return (
+                  <Stack
+                    direction="column"
+                    gap={2}
+                    component="form"
+                    onSubmit={(evt) => {
+                      evt.preventDefault();
+                      handleSubmit();
+                    }}
+                  >
+                    <Typography variant="body1">Подключиться к игроку</Typography>
+                    <TextField value={peerUsername} onChange={(e) => setPeerUsername(e.target.value)} />
+                    <Button type="submit">Подключиться</Button>
+                  </Stack>
+                );
+              })
+              .otherwise(() => null)}
+
+            <Stack direction="column" gap={2}>
+              <Typography variant="body1">Подключенные игроки</Typography>
+              {Object.values(playersConnections).map((connection) => (
+                <Typography variant="body1" key={connection.peer}>
+                  {connection.peer}
+                </Typography>
+              ))}
+            </Stack>
+
+            {Object.values(playersConnections).length > 0 && (
+              <Button
+                variant="contained"
+                onClick={async () => {
+                  const gameId = uuid();
+                  const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
+
+                  const players = [
+                    ...Object.values(playersConnections).map((connection) =>
+                      getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
+                    ),
+                    username,
+                  ];
+                  const game: IGame = {
+                    id: gameId,
+                    players,
+                    createdAt: new Date(),
+                    board: createBoard(players),
+                  };
+                  broadcastEvent({ type: EPeerEventType.initializeGame, data: game });
+                  const gameBlockchain: IGameBlockChain = {
+                    initialBoard: game.board,
+                    players,
+                    blocks: [],
+                  };
+                  gameBlockchains[gameId] = gameBlockchain;
+                  localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
+                  navigate(`${routes.game}/${gameId}`);
                 }}
               >
-                <Typography variant="body1">Подключиться к игроку</Typography>
-                <TextField value={peerUsername} onChange={(e) => setPeerUsername(e.target.value)} />
-                <Button type="submit">Подключиться</Button>
-              </Stack>
-            );
-          })
-          .otherwise(() => null)}
-
-        <Stack direction="column" gap={2}>
-          <Typography variant="body1">Подключенные игроки</Typography>
-          {Object.values(playersConnections).map((connection) => (
-            <Typography variant="body1" key={connection.peer}>
-              {connection.peer}
-            </Typography>
-          ))}
-        </Stack>
-
-        {Object.values(playersConnections).length > 0 && (
-          <Button
-            onClick={async () => {
-              const gameId = uuid();
-              const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
-
-              const players = [
-                ...Object.values(playersConnections).map((connection) =>
-                  getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
-                ),
-                username,
-              ];
-              const game: IGame = {
-                id: gameId,
-                players,
-                createdAt: new Date(),
-                board: createBoard(players),
-              };
-              broadcastEvent({ type: EPeerEventType.initializeGame, data: game });
-              const gameBlockchain: IGameBlockChain = {
-                initialBoard: game.board,
-                players,
-                blocks: [],
-              };
-              gameBlockchains[gameId] = gameBlockchain;
-              localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
-              navigate(`${routes.game}/${gameId}`);
-            }}
-          >
-            Начать новую игру
-          </Button>
-        )}
+                Начать новую игру
+              </Button>
+            )}
+          </Stack>
+        </Card>
       </Stack>
     </PageMain>
   );
