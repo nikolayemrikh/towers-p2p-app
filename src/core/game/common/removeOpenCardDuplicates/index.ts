@@ -9,7 +9,8 @@ import { IBoard } from '../../types';
 export const removeOpenCardDuplicates = (board: IBoard): void => {
   const openCardNumbersWithPowers = board.openCardNumbers.map((cardNumber, index) => ({
     index,
-    ...CARD_VARIANTS_MAP[cardNumber],
+    number: cardNumber,
+    power: CARD_VARIANTS_MAP[cardNumber],
   }));
 
   for (const power of Object.values(EPower)) {
