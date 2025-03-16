@@ -3,7 +3,7 @@ import { IBoard } from '../../types';
 
 import { ICardVariant } from '../../types';
 
-export const createDeckFromDiscaredCards = async (board: IBoard): Promise<void> => {
+export const createDeckFromDiscaredCards = (board: IBoard): void => {
   // shuffle cards in discard pile
   const cardsInBoardDiscardToReduce = [...board.discardedCardNumbers];
   const cardsToBoardDeck: ICardVariant[] = [];

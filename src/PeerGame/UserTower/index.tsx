@@ -5,7 +5,7 @@ import { TUseSelectedCardParams } from '@app/core/game/actions/useSelectedCard/t
 import { CARD_VARIANTS } from '@app/core/game/constants';
 import { EGameActionType, EPower } from '@app/core/game/enums';
 import { ITowerCard, TGameAction } from '@app/core/game/types';
-import { useMutation } from '@tanstack/react-query';
+import { Stack, Typography } from '@mui/material';
 import { Card } from '../Card';
 
 export type TCardVariants = Map<number, EPower>;
@@ -29,17 +29,8 @@ export const UserTower: FC<{
   //     queryClient.refetchQueries({ queryKey: [getGraphqlQueryKey(boardQueryDocument), boardId], exact: true }),
   // });
 
-  const useSelectedCardMutation = useMutation({
-    mutationFn: async (params: TUseSelectedCardParams) => {
-      return makeAction({ type: EGameActionType.UseCard, params });
-    },
-    // mutationFn: async (payload: TUseSelectedCardRequest) => {
-    //   const token = (await supabase.auth.getSession()).data.session?.access_token;
-    //   if (!token) throw new Error('No token');
-    //   // biome-ignore lint/correctness/useHookAtTopLevel: not a react hook
-    //   return rpc.authenticated.useSelectedCard(token, payload);
-    // },
-  });
+  const makeUseSelectedCardAction = (params: TUseSelectedCardParams) =>
+    makeAction({ type: EGameActionType.UseCard, params });
 
   const handleCardClick = async (index: number, isActionAvailable: boolean): Promise<void> => {
     if (!isActionAvailable) return;
@@ -59,28 +50,28 @@ export const UserTower: FC<{
         case EPower.SwapThroughOne:
           return setSelectedCardIndex(index);
         case EPower.RemoveTop:
-          return useSelectedCardMutation.mutate({ currentUsername: userId, boardId: boardId, power: EPower.RemoveTop });
+          return makeUseSelectedCardAction({ currentUsername: userId, boardId: boardId, power: EPower.RemoveTop });
         case EPower.RemoveMiddle:
-          return useSelectedCardMutation.mutate({
+          return makeUseSelectedCardAction({
             currentUsername: userId,
             boardId: boardId,
             power: EPower.RemoveMiddle,
           });
         case EPower.RemoveBottom:
-          return useSelectedCardMutation.mutate({
+          return makeUseSelectedCardAction({
             currentUsername: userId,
             boardId: boardId,
             power: EPower.RemoveBottom,
           });
         case EPower.MoveUpByTwo:
-          return useSelectedCardMutation.mutate({
+          return makeUseSelectedCardAction({
             currentUsername: userId,
             boardId: boardId,
             power: EPower.MoveUpByTwo,
             cardIndex: index,
           });
         case EPower.MoveDownByTwo:
-          return useSelectedCardMutation.mutate({
+          return makeUseSelectedCardAction({
             currentUsername: userId,
             boardId: boardId,
             power: EPower.MoveDownByTwo,
@@ -95,7 +86,7 @@ export const UserTower: FC<{
       try {
         switch (selectedOpenedCardPower) {
           case EPower.Protect:
-            return useSelectedCardMutation.mutate({
+            return makeUseSelectedCardAction({
               currentUsername: userId,
               boardId: boardId,
               power: EPower.Protect,
@@ -103,7 +94,7 @@ export const UserTower: FC<{
               secondCardIndex: index,
             });
           case EPower.SwapNeighbours:
-            return useSelectedCardMutation.mutate({
+            return makeUseSelectedCardAction({
               currentUsername: userId,
               boardId: boardId,
               power: EPower.SwapNeighbours,
@@ -111,7 +102,7 @@ export const UserTower: FC<{
               secondCardIndex: index,
             });
           case EPower.SwapThroughOne:
-            return useSelectedCardMutation.mutate({
+            return makeUseSelectedCardAction({
               currentUsername: userId,
               boardId: boardId,
               power: EPower.SwapThroughOne,
@@ -128,7 +119,6 @@ export const UserTower: FC<{
   };
 
   const checkIsAvailableForAction = (index: number, isProtected: boolean): boolean => {
-    if (useSelectedCardMutation.isPending) return false;
     if (userId !== turnUserId) return false;
     if (pulledCardToChange) return true;
     if (!openedCardToUse) return false;
@@ -152,21 +142,24 @@ export const UserTower: FC<{
   };
 
   return (
-    <div style={{ display: 'flex', 'flexDirection': 'column-reverse', gap: '8px' }}>
-      {cards.map((card, index) => {
-        const power = CARD_VARIANTS.find((cardVariant) => cardVariant.number === card.number)!.power;
-        const isActionAvailable = checkIsAvailableForAction(index, card.isProtected);
-        return (
-          <Card
-            key={card.number}
-            number={card.number}
-            power={power}
-            isActionAvailable={isActionAvailable}
-            isProtected={card.isProtected}
-            onClick={() => handleCardClick(index, isActionAvailable)}
-          />
-        );
-      })}
-    </div>
+    <Stack direction="column" gap={1}>
+      <Typography variant="h6">{userId} (me)</Typography>
+      <Stack direction="column-reverse" gap={1}>
+        {cards.map((card, index) => {
+          const power = CARD_VARIANTS.find((cardVariant) => cardVariant.number === card.number)!.power;
+          const isActionAvailable = checkIsAvailableForAction(index, card.isProtected);
+          return (
+            <Card
+              key={card.number}
+              number={card.number}
+              power={power}
+              isActionAvailable={isActionAvailable}
+              isProtected={card.isProtected}
+              onClick={() => handleCardClick(index, isActionAvailable)}
+            />
+          );
+        })}
+      </Stack>
+    </Stack>
   );
 };

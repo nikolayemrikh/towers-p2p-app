@@ -225,12 +225,6 @@ export const PeerGame: FC = () => {
     <PageMain>
       <Stack>
         <Typography variant="h1">Peer Game</Typography>
-        <Typography variant="h2">Players</Typography>
-        <Stack>
-          {players.map((player) => (
-            <Typography key={player}>{player}</Typography>
-          ))}
-        </Stack>
       </Stack>
       {isAllPlayersConnected ? (
         <div style={{ height: '100%', padding: '16px' }}>
@@ -319,7 +313,7 @@ export const PeerGame: FC = () => {
             {Object.entries(board.towers)
               .filter(([towerUsername]) => towerUsername !== username)
               .map(([towerUsername, tower]) => (
-                <Tower key={towerUsername} cards={tower.cards} />
+                <Tower key={towerUsername} cards={tower.cards} userId={towerUsername} />
               ))}
           </Stack>
         </div>

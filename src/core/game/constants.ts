@@ -87,3 +87,11 @@ export const CARD_VARIANTS: ICardVariant[] = [
   { number: 56, power: EPower.Protect },
   { number: 73, power: EPower.SwapThroughOne },
 ];
+
+export const CARD_VARIANTS_MAP: Record<number, ICardVariant> = CARD_VARIANTS.reduce(
+  (acc, cardVariant) => {
+    acc[cardVariant.number] = cardVariant;
+    return acc;
+  },
+  {} as Record<number, ICardVariant>
+);

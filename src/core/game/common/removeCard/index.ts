@@ -1,27 +1,34 @@
 import { IBoard } from '../../types';
 import { createDeckFromDiscaredCards } from '../createDeckFromDiscaredCards';
+import { removeOpenCardDuplicates } from '../removeOpenCardDuplicates';
 
-export const removeCard = async (board: IBoard, cardIndex: number): Promise<void> => {
-  for (const cardTower of Object.values(board.towers)) {
+export const removeCard = (board: IBoard, startFromUsername: string, cardIndex: number): void => {
+  const players = Object.keys(board.towers);
+  const startTowerIndex = players.findIndex((player) => player === startFromUsername);
+  const playersStartingFromStartTowerIndex = players.slice(startTowerIndex).concat(players.slice(0, startTowerIndex));
+
+  for (const player of playersStartingFromStartTowerIndex) {
+    const cardTower = board.towers[player];
+    const cardInTowerToUpdate = cardTower.cards[cardIndex];
+    if (cardInTowerToUpdate.isProtected) continue;
+
     let cardsInBoardDeck = board.closedCardNumbers;
     if (!cardsInBoardDeck.length) {
-      await createDeckFromDiscaredCards(board);
+      createDeckFromDiscaredCards(board);
       cardsInBoardDeck = board.closedCardNumbers;
     }
-    const cardInBoardDeck = cardsInBoardDeck[cardsInBoardDeck.length - 1] as (typeof cardsInBoardDeck)[0] | undefined;
+    const cardNumberFromBoardDeck = cardsInBoardDeck.pop();
 
-    if (!cardInBoardDeck) throw new Error('Deck should not be empty');
+    if (!cardNumberFromBoardDeck) throw new Error('Deck should not be empty');
 
-    const cardInTowerToUpdate = cardTower.cards[cardIndex];
-
+    const removedCardNumber = cardInTowerToUpdate.number;
     // update card in card tower
-    cardInTowerToUpdate.number = cardInBoardDeck;
+    cardInTowerToUpdate.number = cardNumberFromBoardDeck;
     cardInTowerToUpdate.isProtected = false;
 
     // move card from card tower to opened pile
-    board.openedCardNumberToUse = cardInTowerToUpdate.number;
-
-    // remove card from board deck
-    cardsInBoardDeck.pop();
+    board.openCardNumbers.push(removedCardNumber);
   }
+
+  removeOpenCardDuplicates(board);
 };

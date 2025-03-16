@@ -1,8 +1,9 @@
 import { passTurnToNextUser } from '../../common/passTurnToNextUser/index.ts';
+import { removeOpenCardDuplicates } from '../../common/removeOpenCardDuplicates/index.ts';
 import { IBoard } from '../../types';
 import { IChangeCardToPulledParams } from './types';
 
-export const changeCardToPulled = async (params: IChangeCardToPulledParams, board: IBoard) => {
+export const changeCardToPulled = (params: IChangeCardToPulledParams, board: IBoard) => {
   const { index, currentUsername } = params;
 
   if (board.turnUsername !== currentUsername) throw new Error('Turn user is not current user');
@@ -24,5 +25,7 @@ export const changeCardToPulled = async (params: IChangeCardToPulledParams, boar
   board.pulledCardNumberToChange = null;
   board.openCardNumbers.push(cardToOpenNumber);
 
-  await passTurnToNextUser(board, currentUsername);
+  removeOpenCardDuplicates(board);
+
+  passTurnToNextUser(board, currentUsername);
 };
