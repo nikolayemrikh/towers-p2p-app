@@ -1,5 +1,4 @@
 import { FC } from 'react';
-import { StrictMode } from 'react';
 
 import { BrowserRouter } from 'react-router-dom';
 
@@ -15,19 +14,17 @@ const queryClient = new QueryClient();
 
 export const App: FC = () => {
   return (
-    <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <ThemeModeSettingContextProviderWrapper>
-          <ThemeProvider>
-            <CssBaseline enableColorScheme />
-            <Stack height="100%" minWidth={MIN_WIDTH}>
-              <BrowserRouter>
-                <Routes />
-              </BrowserRouter>
-            </Stack>
-          </ThemeProvider>
-        </ThemeModeSettingContextProviderWrapper>
-      </QueryClientProvider>
-    </StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <ThemeModeSettingContextProviderWrapper>
+        <ThemeProvider>
+          <CssBaseline enableColorScheme />
+          <Stack height="100%" minWidth={MIN_WIDTH}>
+            <BrowserRouter>
+              <Routes />
+            </BrowserRouter>
+          </Stack>
+        </ThemeProvider>
+      </ThemeModeSettingContextProviderWrapper>
+    </QueryClientProvider>
   );
 };
