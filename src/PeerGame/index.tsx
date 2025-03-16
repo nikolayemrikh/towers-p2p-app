@@ -1,4 +1,4 @@
-import { FC, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PageMain } from '@app/components/PageMain';
 import { applyAction } from '@app/core/game/applyAction';
@@ -57,72 +57,18 @@ export const PeerGame: FC = () => {
 
   const isAllPlayersConnected = Object.keys(playersLastBlockHashes).length === players.length - 1;
 
-  useEffect(() => {
-    const peer = new Peer(getPeerId(PAGE_PREFIX, username));
-    peer.once('open', () => {
-      setPeer(peer);
-    });
+  const handleNewConnection = useCallback(
+    (connection: DataConnection) => {
+      connection.on('open', async () => {
+        console.debug('connection opened', connection.peer);
 
-    peer.on('connection', (connection) => {
-      setPlayersConnections((prev) =>
-        produce(prev, (draft) => {
-          draft[connection.peer] = connection;
-        })
-      );
-    });
-    peer.on('disconnected', (connectionId) => {
-      setPlayersConnections((prev) =>
-        produce(prev, (draft) => {
-          delete draft[connectionId];
-        })
-      );
-    });
-
-    window.addEventListener('beforeunload', () => {
-      peer.destroy();
-      setPeer(null);
-    });
-
-    return () => {
-      peer.destroy();
-      setPeer(null);
-    };
-  }, [username]);
-
-  useEffect(() => {
-    if (!peer) return;
-
-    window.setTimeout(() => {
-      setPlayersConnections((prev) =>
-        produce(prev, (draft) => {
-          for (const player of players) {
-            const connectionId = getPeerId(PAGE_PREFIX, player);
-            if (player === username) continue;
-            if (draft[connectionId]) continue;
-            const connection = peer.connect(connectionId, { serialization: 'json' });
-            draft[connectionId] = connection;
-          }
-        })
-      );
-    }, 1000);
-  }, [peer, username, players]);
-
-  useEffect(() => {
-    const gameBlockchain = getStoredGameBlockchains()[id];
-    const ownLastBlock = gameBlockchain.blocks[gameBlockchain.blocks.length - 1];
-    const isAllPlayersLastBlockHashesEqual =
-      gameBlockchain.players.length === Object.keys(playersLastBlockHashes).length + 1 &&
-      Object.values(playersLastBlockHashes).every((hash) => hash === ownLastBlock?.hash);
-
-    setIsAllPlayersSynced(isAllPlayersLastBlockHashesEqual);
-  }, [id, playersLastBlockHashes]);
-
-  useEffect(() => {
-    if (!Object.keys(playersConnections).length) return;
-
-    for (const connection of Object.values(playersConnections)) {
-      connection.once('open', async () => {
+        setPlayersConnections((prev) =>
+          produce(prev, (draft) => {
+            draft[connection.peer] = connection;
+          })
+        );
         const gameBlockchain = getStoredGameBlockchains()[id];
+        console.debug('last block sent to connection');
         await connection.send({
           type: EPeerEventType.afterConnectionStartedCheck,
           data: {
@@ -130,7 +76,8 @@ export const PeerGame: FC = () => {
           },
         } satisfies IAfterConnectionStartedCheckEvent);
       });
-      connection.once('close', () => {
+      connection.on('close', () => {
+        console.debug('connection closed', connection.peer);
         setPlayersConnections((prev) =>
           produce(prev, (draft) => {
             delete draft[connection.peer];
@@ -143,13 +90,9 @@ export const PeerGame: FC = () => {
         );
         setIsAllPlayersSynced(false);
       });
-    }
-  }, [id, playersConnections]);
 
-  useEffect(() => {
-    for (const connection of Object.values(playersConnections)) {
-      const handler = async (data: unknown) => {
-        console.log('data', data);
+      const handleData = async (data: unknown) => {
+        console.debug('data received', data);
 
         if (typeof data !== 'object') return;
         const event = data as TPeerEvent;
@@ -163,8 +106,6 @@ export const PeerGame: FC = () => {
           const gameBlockchains = getStoredGameBlockchains();
           gameBlockchains[id].blocks.push(block);
           localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
-
-          console.log(gameBlockchains[id]);
 
           await connection.send({
             type: EPeerEventType.afterConnectionStartedCheck,
@@ -182,15 +123,88 @@ export const PeerGame: FC = () => {
           );
         }
       };
-      connection.on('data', handler as (data: unknown) => void);
-    }
+      connection.on('data', handleData);
+    },
+    [id]
+  );
+
+  useEffect(() => {
+    const peer = new Peer(getPeerId(PAGE_PREFIX, username));
+    peer.on('open', () => {
+      setPeer(peer);
+    });
+
+    peer.on('connection', async (connection) => {
+      console.debug('connection received', connection.peer);
+
+      handleNewConnection(connection);
+    });
+    peer.on('disconnected', (connectionId) => {
+      console.debug('disconnected', connectionId);
+      // setPlayersConnections((prev) =>
+      //   produce(prev, (draft) => {
+      //     delete draft[connectionId];
+      //   })
+      // );
+      // setPlayersLastBlockHashes((prev) =>
+      //   produce(prev, (draft) => {
+      //     delete draft[getUsernameFromPeerId(PAGE_PREFIX, connectionId)];
+      //   })
+      // );
+      // setIsAllPlayersSynced(false);
+    });
+
+    window.addEventListener('beforeunload', () => {
+      peer.destroy();
+      setPeer(null);
+    });
 
     return () => {
-      for (const connection of Object.values(playersConnections)) {
-        connection.off('data');
-      }
+      peer.destroy();
+      setPeer(null);
     };
-  }, [id, playersConnections]);
+  }, [username, handleNewConnection]);
+
+  useEffect(() => {
+    if (!peer) return;
+
+    setPlayersConnections((prev) =>
+      produce(prev, (draft) => {
+        for (const player of players) {
+          const connectionId = getPeerId(PAGE_PREFIX, player);
+          if (player === username) continue;
+          if (draft[connectionId]) continue;
+          const connection: DataConnection | undefined = peer.connect(connectionId, { serialization: 'json' });
+          // could be undefined if peer is destroyed
+          if (!connection) return;
+          draft[connectionId] = connection;
+          console.debug('connection created', connection.peer);
+          handleNewConnection(connection);
+        }
+      })
+    );
+
+    return () => {
+      setPlayersConnections((prev) =>
+        produce(prev, (draft) => {
+          for (const connection of Object.values(draft)) {
+            connection.close();
+            delete draft[connection.peer];
+          }
+        })
+      );
+    };
+  }, [peer, username, players, handleNewConnection]);
+
+  useEffect(() => {
+    const gameBlockchain = getStoredGameBlockchains()[id];
+    const ownLastBlock = gameBlockchain.blocks[gameBlockchain.blocks.length - 1];
+    const isAllPlayersLastBlockHashesEqual =
+      gameBlockchain.players.length === Object.keys(playersLastBlockHashes).length + 1 &&
+      Object.values(playersLastBlockHashes).every((hash) => hash === ownLastBlock?.hash);
+
+    setIsAllPlayersSynced(isAllPlayersLastBlockHashesEqual);
+  }, [id, playersLastBlockHashes]);
 
   const broadcastEvent = async (event: TPeerEvent) => {
     await Promise.all(Object.values(playersConnections).map((connection) => connection.send(event)));
