@@ -132,41 +132,6 @@ export const PeerLobby: FC = () => {
     };
   }, [username, handleNewConnection, publicKey]);
 
-  // useEffect(() => {
-  //   const handler = (data: unknown, connection: DataConnection) => {
-  //     if (typeof data !== 'object') return;
-  //     const event = data as TPeerEvent;
-  //     if (event.type === EPeerEventType.initializeGame) {
-  //       const game = event.data;
-  //       navigate(`${routes.game}/${game.id}`);
-  //       const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
-  //       const gameBlockchain: IGameBlockChain = {
-  //         initialBoard: game.board,
-  //         players: game.players,
-  //         blocks: [],
-  //       };
-  //       gameBlockchains[game.id] = gameBlockchain;
-  //       localStorage.setItem(ELocalStorageKey.GameBlockchains, JSON.stringify(gameBlockchains));
-  //     } else if (event.type === EPeerEventType.publicKey) {
-  //       const { publicKey } = event.data;
-  //       setPlayersPublicKeys((prev) =>
-  //         produce(prev, (draft) => {
-  //           draft[connection.peer] = publicKey;
-  //         })
-  //       );
-  //     }
-  //   };
-  //   for (const connection of Object.values(playersConnections)) {
-  //     connection.on('data', (data) => handler(data, connection));
-  //   }
-
-  //   return () => {
-  //     for (const connection of Object.values(playersConnections)) {
-  //       connection.off('data', handler as (data: unknown) => void);
-  //     }
-  //   };
-  // }, [navigate, playersConnections]);
-
   const broadcastEvent = (event: TPeerEvent) => {
     for (const connection of Object.values(playersConnections)) {
       connection.send(event);
