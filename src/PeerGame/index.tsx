@@ -18,7 +18,7 @@ import { IAfterConnectionStartedCheckEvent, TPeerEvent } from '@app/core/peer/ty
 import { Stack, Typography } from '@mui/material';
 import { produce } from 'immer';
 import { DataConnection, Peer } from 'peerjs';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { Card } from './Card';
 import { Tower } from './Tower';
 import { UserTower } from './UserTower';
@@ -31,7 +31,7 @@ const getStoredGameBlockchains = (): Record<string, IGameBlockChain> => {
 
 export const PeerGame: FC = () => {
   const { id } = useParams();
-  const navigate = useNavigate();
+
   if (!id) throw new Error('id is required');
 
   const keyPair = useMemo(() => getStoredKeys(), []);
@@ -43,7 +43,6 @@ export const PeerGame: FC = () => {
   const players = useMemo(() => getStoredGameBlockchains()[id].players, [id]);
   const [board, setBoard] = useState<IBoard>(() => {
     const gameBlockchain = getStoredGameBlockchains()[id];
-    console.log(gameBlockchain.players);
 
     const board = gameBlockchain.initialBoard;
     for (let i = 0; i < gameBlockchain.blocks.length; i++) {
@@ -120,18 +119,15 @@ export const PeerGame: FC = () => {
           if (!validateBlock(gameBlockchain, block)) {
             throw new Error('Invalid block');
           }
-          console.log(gameBlockchain.players);
-
           const playerPublicKey = gameBlockchain.players.find(
             (player) => player.username === getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
           )?.publicKey;
           if (!playerPublicKey) throw new Error('Player public key not found');
-          console.log(playerPublicKey);
 
           if (!(await verifyBlock(block, playerPublicKey))) {
             throw new Error('Invalid signature');
           }
-          console.log('VALID');
+
           setBoard((prev) => produce(prev, (draft) => applyAction(draft, block.action)));
           const gameBlockchains = getStoredGameBlockchains();
           gameBlockchains[id].blocks.push(block);
