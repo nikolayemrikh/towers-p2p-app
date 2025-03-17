@@ -1,6 +1,7 @@
 import { FC, useCallback, useEffect, useMemo, useState } from 'react';
 
 import { PageMain } from '@app/components/PageMain';
+import { getStoredKeys } from '@app/core/crypto/keyManagement';
 import { applyAction } from '@app/core/game/applyAction';
 import { checkIsUserCardAvailableForInitialAction } from '@app/core/game/common/checkIsUserCardAvailableForInitialAction';
 import { CARD_VARIANTS } from '@app/core/game/constants';
@@ -8,9 +9,11 @@ import { createBlock } from '@app/core/game/createBlock';
 import { EGameActionType } from '@app/core/game/enums';
 import { IBoard, IGameBlockChain, TGameAction } from '@app/core/game/types';
 import { validateBlock } from '@app/core/game/validateBlock';
+import { verifyBlock } from '@app/core/game/verifyBlock';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { EPeerEventType } from '@app/core/peer/enums';
 import { getPeerId } from '@app/core/peer/getPeerId';
+import { getUsernameFromPeerId } from '@app/core/peer/getUsernameFromPeerId';
 import { IAfterConnectionStartedCheckEvent, TPeerEvent } from '@app/core/peer/types';
 import { Stack, Typography } from '@mui/material';
 import { produce } from 'immer';
@@ -31,12 +34,17 @@ export const PeerGame: FC = () => {
   const navigate = useNavigate();
   if (!id) throw new Error('id is required');
 
+  const keyPair = useMemo(() => getStoredKeys(), []);
+  if (!keyPair) throw new Error('keyPair is required');
+
   const username = localStorage.getItem(ELocalStorageKey.Username);
   if (!username) throw new Error('username is required');
 
   const players = useMemo(() => getStoredGameBlockchains()[id].players, [id]);
   const [board, setBoard] = useState<IBoard>(() => {
     const gameBlockchain = getStoredGameBlockchains()[id];
+    console.log(gameBlockchain.players);
+
     const board = gameBlockchain.initialBoard;
     for (let i = 0; i < gameBlockchain.blocks.length; i++) {
       const block = gameBlockchain.blocks[i];
@@ -112,6 +120,16 @@ export const PeerGame: FC = () => {
           if (!validateBlock(gameBlockchain, block)) {
             throw new Error('Invalid block');
           }
+          console.log(gameBlockchain.players);
+
+          const playerPublicKey = gameBlockchain.players.find(
+            (player) => player.username === getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
+          )?.publicKey;
+          if (!playerPublicKey) throw new Error('Player public key not found');
+          if (!(await verifyBlock(block, playerPublicKey))) {
+            throw new Error('Invalid signature');
+          }
+          console.log('VALID');
           setBoard((prev) => produce(prev, (draft) => applyAction(draft, block.action)));
           const gameBlockchains = getStoredGameBlockchains();
           gameBlockchains[id].blocks.push(block);
@@ -135,7 +153,7 @@ export const PeerGame: FC = () => {
       };
       connection.on('data', handleData);
     },
-    [id]
+    [id, keyPair]
   );
 
   useEffect(() => {
@@ -221,7 +239,8 @@ export const PeerGame: FC = () => {
   };
   const makeAction = async (action: TGameAction) => {
     const gameBlockchain = getStoredGameBlockchains()[id];
-    const block = await createBlock(username, action, gameBlockchain);
+
+    const block = await createBlock(username, action, gameBlockchain, keyPair);
 
     setIsAllPlayersSynced(false);
     await broadcastEvent({ type: EPeerEventType.action, data: block });

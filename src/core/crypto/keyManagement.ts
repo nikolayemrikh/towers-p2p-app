@@ -28,6 +28,43 @@ export const exportKeys = async (keyPair: CryptoKeyPair): Promise<IKeyPair> => {
   };
 };
 
+export const importKeys = async (keyPair: IKeyPair): Promise<CryptoKeyPair> => {
+  const publicKey = await crypto.subtle.importKey(
+    'spki',
+    Uint8Array.from(atob(keyPair.publicKey), (c) => c.charCodeAt(0)),
+    {
+      name: 'ECDSA',
+      namedCurve: 'P-256',
+    },
+    true,
+    ['verify']
+  );
+  const privateKey = await crypto.subtle.importKey(
+    'pkcs8',
+    Uint8Array.from(atob(keyPair.privateKey), (c) => c.charCodeAt(0)),
+    {
+      name: 'ECDSA',
+      namedCurve: 'P-256',
+    },
+    true,
+    ['sign']
+  );
+  return { publicKey, privateKey };
+};
+
+export const importPublicKey = async (publicKey: string): Promise<CryptoKey> => {
+  return await crypto.subtle.importKey(
+    'spki',
+    Uint8Array.from(atob(publicKey), (c) => c.charCodeAt(0)),
+    {
+      name: 'ECDSA',
+      namedCurve: 'P-256',
+    },
+    true,
+    ['verify']
+  );
+};
+
 export const storeKeys = async (keyPair: IKeyPair): Promise<void> => {
   localStorage.setItem(ELocalStorageKey.PublicKey, keyPair.publicKey);
   localStorage.setItem(ELocalStorageKey.PrivateKey, keyPair.privateKey);

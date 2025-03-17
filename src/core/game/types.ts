@@ -84,4 +84,5 @@ export interface IStepBlock {
   action: TGameAction;
   hash: string;
   previousHash: string | undefined;
+  signature: string;
 }

@@ -44,7 +44,7 @@ export const PeerLobby: FC = () => {
   const [playersConnections, setPlayersConnections] = useState<Record<string, DataConnection>>({});
   const [playersPublicKeys, setPlayersPublicKeys] = useState<Record<string, string>>({});
   const isAllPublikKeysGathered = Object.values(playersConnections).every(
-    (connection) => !!playersPublicKeys[connection.peer]
+    (connection) => !!playersPublicKeys[getUsernameFromPeerId(PAGE_PREFIX, connection.peer)]
   );
 
   const handleNewConnection = useCallback(
@@ -72,7 +72,7 @@ export const PeerLobby: FC = () => {
         );
         setPlayersPublicKeys((prev) =>
           produce(prev, (draft) => {
-            delete draft[connection.peer];
+            delete draft[getUsernameFromPeerId(PAGE_PREFIX, connection.peer)];
           })
         );
       });
@@ -84,6 +84,7 @@ export const PeerLobby: FC = () => {
           const game = event.data;
           navigate(`${routes.game}/${game.id}`);
           const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
+
           const gameBlockchain: IGameBlockChain = {
             initialBoard: game.board,
             players: game.players,
@@ -95,7 +96,7 @@ export const PeerLobby: FC = () => {
           const { publicKey } = event.data;
           setPlayersPublicKeys((prev) =>
             produce(prev, (draft) => {
-              draft[connection.peer] = publicKey;
+              draft[getUsernameFromPeerId(PAGE_PREFIX, connection.peer)] = publicKey;
             })
           );
         }
@@ -229,18 +230,25 @@ export const PeerLobby: FC = () => {
                   const gameId = uuid();
                   const gameBlockchains = JSON.parse(localStorage.getItem(ELocalStorageKey.GameBlockchains) ?? '{}');
 
+                  const otherPlayerUsernames = Object.values(playersConnections).map((connection) =>
+                    getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
+                  );
                   const players = [
-                    ...Object.values(playersConnections).map((connection) =>
-                      getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
-                    ),
-                    username,
+                    ...otherPlayerUsernames.map((player) => ({
+                      username: player,
+                      publicKey: playersPublicKeys[player],
+                    })),
+                    { username, publicKey: publicKey! },
                   ];
+                  const playerUsernames = [...otherPlayerUsernames, username];
+
                   const game: IGame = {
                     id: gameId,
-                    players: players.map((player) => ({ username: player, publicKey: playersPublicKeys[player] })),
+                    players,
                     createdAt: new Date(),
-                    board: createBoard(players),
+                    board: createBoard(playerUsernames),
                   };
+
                   broadcastEvent({ type: EPeerEventType.initializeGame, data: game });
                   const gameBlockchain: IGameBlockChain = {
                     initialBoard: game.board,
