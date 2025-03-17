@@ -182,8 +182,8 @@ export const PeerGame: FC = () => {
     setPlayersConnections((prev) =>
       produce(prev, (draft) => {
         for (const player of players) {
-          const connectionId = getPeerId(PAGE_PREFIX, player);
-          if (player === username) continue;
+          const connectionId = getPeerId(PAGE_PREFIX, player.username);
+          if (player.username === username) continue;
           if (draft[connectionId]) continue;
           const connection: DataConnection | undefined = peer.connect(connectionId, { serialization: 'json' });
           // could be undefined if peer is destroyed

@@ -8,9 +8,14 @@ export interface ICardVariant {
   power: EPower;
 }
 
+export interface IPlayer {
+  username: string;
+  publicKey: string;
+}
+
 export interface IGame {
   id: string;
-  players: string[];
+  players: IPlayer[];
   createdAt: Date;
   board: IBoard;
 }
@@ -41,7 +46,7 @@ export interface IBoard {
 
 export interface IGameBlockChain {
   initialBoard: IBoard;
-  players: string[];
+  players: IPlayer[];
   blocks: IStepBlock[];
 }
 export interface IBaseGameAction {
