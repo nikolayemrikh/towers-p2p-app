@@ -153,7 +153,7 @@ export const PeerGame: FC = () => {
       };
       connection.on('data', handleData);
     },
-    [id, keyPair]
+    [id]
   );
 
   useEffect(() => {
