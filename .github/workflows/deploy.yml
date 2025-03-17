@@ -1,4 +1,4 @@
-name: Deploy SPA
+name: Deploy to GitHub Pages
 
 on:
   push:
@@ -13,26 +13,20 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
         with:
-          username: ${{ secrets.DOCKER_USERNAME }}
-          password: ${{ secrets.DOCKER_ACCESS_TOKEN }}
+          node-version: '20'
+          cache: 'npm'
 
-      - name: Build and push Frontend image
-        run: |
-          docker build -t ${{ secrets.DOCKER_USERNAME }}/towers-app:latest --build-arg SUPABASE_PROJECT_ID=${{ secrets.SUPABASE_PROJECT_ID }} --build-arg SUPABASE_ACCESS_TOKEN=${{ secrets.SUPABASE_ACCESS_TOKEN }} --build-arg VITE_SUPABASE_ANON_KEY=${{ secrets.VITE_SUPABASE_ANON_KEY }} --build-arg VITE_SUPABASE_URL=${{ secrets.VITE_SUPABASE_URL }} --build-arg VITE_API_URL=${{ secrets.VITE_API_URL }} .
-          docker push ${{ secrets.DOCKER_USERNAME }}/towers-app:latest
+      - name: Install dependencies
+        run: npm ci
 
-      - name: Deploy to server
-        uses: appleboy/ssh-action@v0.1.10
+      - name: Build
+        run: npm run build
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
         with:
-          host: ${{ secrets.SERVER_HOST }}
-          port: ${{ secrets.SERVER_PORT }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          script: |
-            echo ${{ secrets.DOCKER_ACCESS_TOKEN }} | docker login -u ${{ secrets.DOCKER_USERNAME }} --password-stdin
-            docker pull ${{ secrets.DOCKER_USERNAME }}/towers-app:latest
-            cd ~/towers
-            docker compose up -d --force-recreate towers-app
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
