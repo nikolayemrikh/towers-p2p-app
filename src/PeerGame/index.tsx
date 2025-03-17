@@ -126,6 +126,8 @@ export const PeerGame: FC = () => {
             (player) => player.username === getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
           )?.publicKey;
           if (!playerPublicKey) throw new Error('Player public key not found');
+          console.log(playerPublicKey);
+
           if (!(await verifyBlock(block, playerPublicKey))) {
             throw new Error('Invalid signature');
           }
