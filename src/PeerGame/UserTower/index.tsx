@@ -1,7 +1,7 @@
 import { FC, useState } from 'react';
 
-import { checkIsUserCardAvailableForInitialAction } from '@app/Board/helpers/checkIsUserCardAvailableForInitialAction';
 import { TUseSelectedCardParams } from '@app/core/game/actions/useSelectedCard/types';
+import { checkIsUserCardAvailableForInitialAction } from '@app/core/game/common/checkIsUserCardAvailableForInitialAction';
 import { CARD_VARIANTS } from '@app/core/game/constants';
 import { EGameActionType, EPower } from '@app/core/game/enums';
 import { ITowerCard, TGameAction } from '@app/core/game/types';
