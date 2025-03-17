@@ -17,9 +17,10 @@ export const UserTower: FC<{
   cards: ITowerCard[];
   openedCardToUse: number | null;
   pulledCardToChange: number | null;
+  isGameFinished: boolean;
   makeAction: (action: TGameAction) => void;
 }> = (props) => {
-  const { boardId, userId, turnUserId, cards, openedCardToUse, pulledCardToChange, makeAction } = props;
+  const { boardId, userId, turnUserId, cards, openedCardToUse, pulledCardToChange, isGameFinished, makeAction } = props;
   const [selectedCardIndexAccessor, setSelectedCardIndex] = useState<number | null>(null);
 
   // const changeCardToPulledMutation = useMutation({
@@ -122,6 +123,7 @@ export const UserTower: FC<{
     if (userId !== turnUserId) return false;
     if (pulledCardToChange) return true;
     if (!openedCardToUse) return false;
+    if (isGameFinished) return false;
 
     const selectedOpenedCardPower = CARD_VARIANTS.find((cardVariant) => cardVariant.number === openedCardToUse)!.power;
     const selectedCardIndex = selectedCardIndexAccessor;

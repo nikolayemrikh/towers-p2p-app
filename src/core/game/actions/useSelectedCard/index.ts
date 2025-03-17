@@ -104,6 +104,4 @@ export const useSelectedCard = (params: TUseSelectedCardParams, board: IBoard): 
   board.openedCardNumberToUse = null;
 
   passTurnToNextUser(board, currentUsername);
-
-  // await notifyBoardStateChanged(supabaseServiceClient, boardId);
 };

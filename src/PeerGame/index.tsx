@@ -50,6 +50,17 @@ export const PeerGame: FC = () => {
 
     return board;
   });
+  const winnerUsername: string | null = useMemo(() => {
+    for (const [player, tower] of Object.entries(board.towers)) {
+      const isTowerSorted = tower.cards.every((card, index, arr) => {
+        const nextCard = arr[index + 1];
+        return !nextCard || card.number > nextCard.number;
+      });
+      if (!isTowerSorted) continue;
+      return player;
+    }
+    return null;
+  }, [board]);
   const [peer, setPeer] = useState<Peer | null>(null);
   const [playersConnections, setPlayersConnections] = useState<Record<string, DataConnection>>({});
   const [playersLastBlockHashes, setPlayersLastBlockHashes] = useState<Record<string, string | undefined>>({});
@@ -230,9 +241,11 @@ export const PeerGame: FC = () => {
         <div style={{ height: '100%', padding: '16px' }}>
           <div>
             <div>Deck ({board.closedCardNumbers.length})</div>
+            {winnerUsername && <div>Winner: {winnerUsername}</div>}
             <button
               disabled={
                 !isAllPlayersSynced ||
+                !!winnerUsername ||
                 board.turnUsername !== username ||
                 !board.closedCardNumbers.length ||
                 !!board.pulledCardNumberToChange ||
@@ -264,6 +277,7 @@ export const PeerGame: FC = () => {
                 power={CARD_VARIANTS.find((card) => card.number === openedCardNumber)!.power}
                 isActionAvailable={
                   isAllPlayersSynced &&
+                  !winnerUsername &&
                   username === board.turnUsername &&
                   !board.openedCardNumberToUse &&
                   !board.pulledCardNumberToChange &&
@@ -306,6 +320,7 @@ export const PeerGame: FC = () => {
               userId={username}
               openedCardToUse={board.openedCardNumberToUse ?? null}
               pulledCardToChange={board.pulledCardNumberToChange ?? null}
+              isGameFinished={!!winnerUsername}
               makeAction={(action) => {
                 makeAction(action);
               }}
