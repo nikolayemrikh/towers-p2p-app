@@ -1,4 +1,5 @@
 import { ELocalStorageKey } from '../localStorage/constants';
+import { CRYPTO_KEY_PARAMS, CRYPTO_SIGNATURE_PARAMS } from './constants';
 
 export interface IKeyPair {
   publicKey: string;
@@ -6,14 +7,7 @@ export interface IKeyPair {
 }
 
 export const generateKeys = async (): Promise<CryptoKeyPair> => {
-  const keyPair = await crypto.subtle.generateKey(
-    {
-      name: 'ECDSA',
-      namedCurve: 'P-256',
-    },
-    true,
-    ['sign', 'verify']
-  );
+  const keyPair = await crypto.subtle.generateKey(CRYPTO_KEY_PARAMS, true, ['sign', 'verify']);
 
   return keyPair;
 };
@@ -28,84 +22,30 @@ export const exportKeys = async (keyPair: CryptoKeyPair): Promise<IKeyPair> => {
   };
 };
 
-export const importKeys = async (keyPair: IKeyPair): Promise<CryptoKeyPair> => {
-  const publicKey = await crypto.subtle.importKey(
-    'spki',
-    Uint8Array.from(atob(keyPair.publicKey), (c) => c.charCodeAt(0)),
-    {
-      name: 'ECDSA',
-      namedCurve: 'P-256',
-    },
-    true,
-    ['verify']
-  );
-  const privateKey = await crypto.subtle.importKey(
-    'pkcs8',
-    Uint8Array.from(atob(keyPair.privateKey), (c) => c.charCodeAt(0)),
-    {
-      name: 'ECDSA',
-      namedCurve: 'P-256',
-    },
-    true,
-    ['sign']
-  );
-  return { publicKey, privateKey };
-};
-
 export const importPublicKey = async (publicKey: string): Promise<CryptoKey> => {
   return await crypto.subtle.importKey(
     'spki',
     Uint8Array.from(atob(publicKey), (c) => c.charCodeAt(0)),
-    {
-      name: 'ECDSA',
-      namedCurve: 'P-256',
-    },
+    CRYPTO_KEY_PARAMS,
     true,
     ['verify']
   );
 };
 
-export const storeKeys = async (keyPair: IKeyPair): Promise<void> => {
+export const importPrivateKey = async (privateKey: string): Promise<CryptoKey> => {
+  return await crypto.subtle.importKey(
+    'pkcs8',
+    Uint8Array.from(atob(privateKey), (c) => c.charCodeAt(0)),
+    CRYPTO_KEY_PARAMS,
+    true,
+    ['sign']
+  );
+};
+
+export const storeKeys = (keyPair: IKeyPair): void => {
   localStorage.setItem(ELocalStorageKey.PublicKey, keyPair.publicKey);
   localStorage.setItem(ELocalStorageKey.PrivateKey, keyPair.privateKey);
 };
-
-// export const generateAndStoreKeys = async (): Promise<IKeyPair> => {
-//   const storedPublicKey = localStorage.getItem(ELocalStorageKey.PublicKey);
-//   const storedPrivateKey = localStorage.getItem(ELocalStorageKey.PrivateKey);
-
-//   if (storedPublicKey && storedPrivateKey) {
-//     return {
-//       publicKey: storedPublicKey,
-//       privateKey: storedPrivateKey,
-//     };
-//   }
-
-//   const keyPair = await crypto.subtle.generateKey(
-//     {
-//       name: 'ECDSA',
-//       namedCurve: 'P-256',
-//     },
-//     true,
-//     ['sign', 'verify']
-//   );
-
-//   // Convert CryptoKey to string format
-//   const publicKeyString = await crypto.subtle.exportKey('spki', keyPair.publicKey);
-//   const privateKeyString = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
-
-//   // Convert ArrayBuffer to base64 string
-//   const publicKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(publicKeyString)));
-//   const privateKeyBase64 = btoa(String.fromCharCode(...new Uint8Array(privateKeyString)));
-
-//   localStorage.setItem(ELocalStorageKey.PublicKey, publicKeyBase64);
-//   localStorage.setItem(ELocalStorageKey.PrivateKey, privateKeyBase64);
-
-//   return {
-//     publicKey: publicKeyBase64,
-//     privateKey: privateKeyBase64,
-//   };
-// };
 
 export const getStoredKeys = (): IKeyPair | null => {
   const publicKey = localStorage.getItem(ELocalStorageKey.PublicKey);
@@ -119,4 +59,26 @@ export const getStoredKeys = (): IKeyPair | null => {
     publicKey,
     privateKey,
   };
+};
+
+export const signData = async (privateKey: string, data: string): Promise<string> => {
+  const importedPrivateKey = await importPrivateKey(privateKey);
+  const signature = await crypto.subtle.sign(
+    CRYPTO_SIGNATURE_PARAMS,
+    importedPrivateKey,
+    new TextEncoder().encode(data)
+  );
+  return btoa(String.fromCharCode(...new Uint8Array(signature)));
+};
+
+export const verifySignature = async (signature: string, publicKey: string, data: string): Promise<boolean> => {
+  const importedPublicKey = await importPublicKey(publicKey);
+  const signatureArray = Uint8Array.from(atob(signature), (c) => c.charCodeAt(0));
+  const verified = await crypto.subtle.verify(
+    CRYPTO_SIGNATURE_PARAMS,
+    importedPublicKey,
+    signatureArray,
+    new TextEncoder().encode(data)
+  );
+  return verified;
 };

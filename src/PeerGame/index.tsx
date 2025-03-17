@@ -238,7 +238,7 @@ export const PeerGame: FC = () => {
   const makeAction = async (action: TGameAction) => {
     const gameBlockchain = getStoredGameBlockchains()[id];
 
-    const block = await createBlock(username, action, gameBlockchain, keyPair);
+    const block = await createBlock(username, action, gameBlockchain, keyPair.privateKey);
 
     setIsAllPlayersSynced(false);
     await broadcastEvent({ type: EPeerEventType.action, data: block });
