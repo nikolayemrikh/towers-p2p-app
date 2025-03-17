@@ -11,7 +11,6 @@ import { validateBlock } from '@app/core/game/validateBlock';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { EPeerEventType } from '@app/core/peer/enums';
 import { getPeerId } from '@app/core/peer/getPeerId';
-import { getUsernameFromPeerId } from '@app/core/peer/getUsernameFromPeerId';
 import { IAfterConnectionStartedCheckEvent, TPeerEvent } from '@app/core/peer/types';
 import { Stack, Typography } from '@mui/material';
 import { produce } from 'immer';
@@ -96,7 +95,7 @@ export const PeerGame: FC = () => {
         );
         setPlayersLastBlockHashes((prev) =>
           produce(prev, (draft) => {
-            delete draft[getUsernameFromPeerId(PAGE_PREFIX, connection.peer)];
+            delete draft[connection.peer];
           })
         );
         setIsAllPlayersSynced(false);
@@ -129,7 +128,7 @@ export const PeerGame: FC = () => {
 
           setPlayersLastBlockHashes((prev) =>
             produce(prev, (draft) => {
-              draft[getUsernameFromPeerId(PAGE_PREFIX, connection.peer)] = receivedLastBlockHash;
+              draft[connection.peer] = receivedLastBlockHash;
             })
           );
         }
@@ -159,7 +158,7 @@ export const PeerGame: FC = () => {
       // );
       // setPlayersLastBlockHashes((prev) =>
       //   produce(prev, (draft) => {
-      //     delete draft[getUsernameFromPeerId(PAGE_PREFIX, connectionId)];
+      //     delete draft[connectionId];
       //   })
       // );
       // setIsAllPlayersSynced(false);
