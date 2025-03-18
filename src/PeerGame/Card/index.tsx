@@ -25,6 +25,7 @@ export const Card: FC<{
     <Paper
       onClick={() => onClick?.()}
       sx={{
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
@@ -50,6 +51,7 @@ export const Card: FC<{
           height: 40,
           clipPath: 'polygon(0 0, 5% 85%, 50% 100%, 95% 85%, 100% 0)',
           backgroundColor: 'grey',
+          zIndex: 2,
         }}
       >
         <Typography
@@ -66,12 +68,15 @@ export const Card: FC<{
       <Stack
         justifyContent="center"
         alignItems="center"
+        position="relative"
+        top={-10}
         sx={{
           width: 30,
           height: 70,
           clipPath:
             'polygon(2% 2%, 8% 31.3%, 2% 64.6%, 2% 98%, 27% 78%, 52% 98%, 77% 78%, 98% 98%, 98% 64.6%, 100% 31.3%, 94% 2%)',
           backgroundColor: 'orange',
+          zIndex: 1,
         }}
       ></Stack>
       <Typography variant="body1" color="white">
