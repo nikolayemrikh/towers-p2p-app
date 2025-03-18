@@ -279,6 +279,7 @@ export const PeerGame: FC = () => {
             <div>Pulled card</div>
             {board.pulledCardNumberToChange && (
               <Card
+                width={230}
                 number={board.pulledCardNumberToChange}
                 power={CARD_VARIANTS.find((card) => card.number === board.pulledCardNumberToChange)!.power}
                 isActionAvailable={false}
@@ -288,6 +289,7 @@ export const PeerGame: FC = () => {
             <div>Opened cards</div>
             {board.openCardNumbers.map((openedCardNumber) => (
               <Card
+                width={230}
                 key={openedCardNumber}
                 number={openedCardNumber}
                 power={CARD_VARIANTS.find((card) => card.number === openedCardNumber)!.power}
@@ -318,6 +320,7 @@ export const PeerGame: FC = () => {
             <div>Selected opened card</div>
             {board.openedCardNumberToUse && (
               <Card
+                width={230}
                 number={board.openedCardNumberToUse}
                 power={CARD_VARIANTS.find((card) => card.number === board.openedCardNumberToUse)!.power}
                 isActionAvailable={false}

@@ -16,6 +16,7 @@ export const Tower: FC<{ cards: ITowerCard[]; userId: string }> = (props) => {
           const power = CARD_VARIANTS.find((cardVariant) => cardVariant.number === card.number)!.power;
           return (
             <Card
+              width={230}
               key={card.number}
               number={card.number}
               power={power}

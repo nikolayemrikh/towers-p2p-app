@@ -155,6 +155,7 @@ export const UserTower: FC<{
               key={card.number}
               number={card.number}
               power={power}
+              width={230}
               isActionAvailable={isActionAvailable}
               isProtected={card.isProtected}
               onClick={() => handleCardClick(index, isActionAvailable)}
