@@ -26,11 +26,11 @@ export const Card: FC<{
     <Paper
       onClick={() => onClick?.()}
       sx={{
+        position: 'relative',
         display: 'flex',
         flexDirection: 'column',
-        alignItems: 'center',
         borderRadius: '8%',
-        padding: '12%',
+
         overflow: 'hidden',
         width: width ?? 230,
         aspectRatio: '1000/750',
@@ -43,62 +43,63 @@ export const Card: FC<{
       //   'backgroundColor': isActionAvailable ? 'purple' : 'black',
       // }}
     >
-      <Stack
-        justifyContent="center"
-        alignItems="center"
-        sx={{
-          width: '30%',
-          aspectRatio: '1/1',
-          clipPath: 'polygon(0 0, 5% 85%, 50% 100%, 95% 85%, 100% 0)',
-          backgroundColor: 'grey',
-          zIndex: 2,
-        }}
-      >
-        <svg width="100%" height="100%" viewBox="0 0 100 100">
-          <text
-            x="50"
-            y="50"
-            dominantBaseline="middle"
-            textAnchor="middle"
-            fill="white"
-            stroke="black"
-            strokeWidth="0.5"
-            style={{
-              fontSize: '60',
-              fontWeight: 'bold',
-            }}
-          >
-            {number}
-          </text>
-        </svg>
-      </Stack>
-      <Stack
-        justifyContent="center"
-        alignItems="center"
-        position="relative"
-        top={'-6%'}
-        sx={{
-          aspectRatio: '1/1',
-          width: '23%',
-          height: '70%',
-          clipPath:
-            'polygon(2% 2%, 4% 31.3%, 2% 64.6%, 2% 98%, 27% 78%, 52% 98%, 77% 78%, 98% 98%, 98% 64.6%, 100% 31.3%, 98% 2%)',
-          backgroundColor: '#e65100',
-          zIndex: 1,
-        }}
-      >
+      <Stack direction="column" flexGrow={1} justifyContent="center" alignItems="center" padding="12%">
         <Stack
-          position="absolute"
+          justifyContent="center"
+          alignItems="center"
           sx={{
-            width: '100%',
-            height: '100%',
-            clipPath: 'polygon(8% 31.3%, 2% 64.6%, 98% 64.6%, 100% 31.3%)',
-            backgroundColor: '#bf360c',
-            opacity: 0.5,
+            width: '30%',
+            aspectRatio: '1/1',
+            clipPath: 'polygon(0 0, 5% 85%, 50% 100%, 95% 85%, 100% 0)',
+            backgroundColor: 'grey',
+            zIndex: 2,
           }}
-        />
-      </Stack>
-      {/* <Typography
+        >
+          <svg width="100%" height="100%" viewBox="0 0 100 100">
+            <text
+              x="50"
+              y="50"
+              dominantBaseline="middle"
+              textAnchor="middle"
+              fill="white"
+              stroke="black"
+              strokeWidth="0.5"
+              style={{
+                fontSize: '60',
+                fontWeight: 'bold',
+              }}
+            >
+              {number}
+            </text>
+          </svg>
+        </Stack>
+        <Stack
+          justifyContent="center"
+          alignItems="center"
+          position="relative"
+          top={'-6%'}
+          sx={{
+            aspectRatio: '1/1',
+            width: '23%',
+            height: '70%',
+            clipPath:
+              'polygon(2% 2%, 4% 31.3%, 2% 64.6%, 2% 98%, 27% 78%, 52% 98%, 77% 78%, 98% 98%, 98% 64.6%, 100% 31.3%, 98% 2%)',
+            backgroundColor: '#e65100',
+            zIndex: 1,
+          }}
+        >
+          <Stack
+            position="absolute"
+            sx={{
+              width: '100%',
+              height: '100%',
+              clipPath: 'polygon(8% 31.3%, 2% 64.6%, 98% 64.6%, 100% 31.3%)',
+              backgroundColor: '#bf360c',
+              opacity: 0.5,
+            }}
+          />
+        </Stack>
+        {/* <Typography
         variant="body1"
         color="white"
         sx={{
@@ -108,6 +109,7 @@ export const Card: FC<{
       >
         ({PowerTitle[power]})
       </Typography> */}
+      </Stack>
     </Paper>
   );
 };

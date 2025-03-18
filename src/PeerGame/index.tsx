@@ -278,13 +278,15 @@ export const PeerGame: FC = () => {
             </button>
             <div>Pulled card</div>
             {board.pulledCardNumberToChange && (
-              <Card
-                width={230}
-                number={board.pulledCardNumberToChange}
-                power={CARD_VARIANTS.find((card) => card.number === board.pulledCardNumberToChange)!.power}
-                isActionAvailable={false}
-                isProtected={false}
-              />
+              <Stack direction="column">
+                <Card
+                  width={230}
+                  number={board.pulledCardNumberToChange}
+                  power={CARD_VARIANTS.find((card) => card.number === board.pulledCardNumberToChange)!.power}
+                  isActionAvailable={false}
+                  isProtected={false}
+                />
+              </Stack>
             )}
             <div>Opened cards</div>
             {board.openCardNumbers.map((openedCardNumber) => (
