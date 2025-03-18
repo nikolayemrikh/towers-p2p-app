@@ -74,11 +74,22 @@ export const Card: FC<{
           width: 30,
           height: 70,
           clipPath:
-            'polygon(2% 2%, 8% 31.3%, 2% 64.6%, 2% 98%, 27% 78%, 52% 98%, 77% 78%, 98% 98%, 98% 64.6%, 100% 31.3%, 94% 2%)',
+            'polygon(2% 2%, 8% 31.3%, 2% 64.6%, 2% 98%, 24% 85%, 49% 98%, 74% 85%, 94% 98%, 94% 64.6%, 100% 31.3%, 94% 2%)',
           backgroundColor: 'orange',
           zIndex: 1,
         }}
-      ></Stack>
+      >
+        <Stack
+          position="absolute"
+          sx={{
+            width: '100%',
+            height: '100%',
+            clipPath: 'polygon(8% 31.3%, 2% 64.6%, 94% 64.6%, 100% 31.3%)',
+            backgroundColor: '#bf360c',
+            opacity: 0.5,
+          }}
+        />
+      </Stack>
       <Typography variant="body1" color="white">
         ({PowerTitle[power]})
       </Typography>
