@@ -95,3 +95,5 @@ export const CARD_VARIANTS_MAP: Record<number, EPower> = CARD_VARIANTS.reduce(
   },
   {} as Record<number, EPower>
 );
+
+export const MAX_CARD_NUMBER = Math.max(...CARD_VARIANTS.map((card) => card.number));

@@ -1,3 +1,4 @@
+import { MAX_CARD_NUMBER } from '@app/core/game/constants';
 import { EPower } from '@app/core/game/enums';
 import { Paper, Stack } from '@mui/material';
 import { FC } from 'react';
@@ -13,6 +14,8 @@ const PowerTitle: Record<EPower, string> = {
   Swap_through_one: 'Swap through one',
 };
 
+const TOWeR_CAP = 20;
+
 export const Card: FC<{
   number: number;
   power: EPower;
@@ -22,6 +25,11 @@ export const Card: FC<{
   width?: number;
 }> = (props) => {
   const { number, power, isActionAvailable, isProtected, onClick, width } = props;
+  const percent = number / (MAX_CARD_NUMBER / 100);
+  const halfPercent = (percent - 50) * 2;
+  const halfRate = halfPercent / 100;
+  const towerWidth = percent + halfRate * -1 * TOWeR_CAP;
+
   return (
     <Paper
       onClick={() => onClick?.()}
@@ -98,6 +106,9 @@ export const Card: FC<{
               opacity: 0.5,
             }}
           />
+        </Stack>
+        <Stack position="absolute" top={0} left={0} right={0} bottom={0} justifyContent="center" alignItems="center">
+          <Stack width={`${towerWidth}%`} height="100%" bgcolor="burlywood" />
         </Stack>
         {/* <Typography
         variant="body1"
