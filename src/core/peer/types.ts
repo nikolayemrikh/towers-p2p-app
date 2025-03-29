@@ -34,4 +34,19 @@ export interface IPublicKeyEvent extends IPeerBaseEvent {
   data: IPublicKeyEventData;
 }
 
-export type TPeerEvent = IInitializeGameEvent | IActionEvent | IAfterConnectionStartedCheckEvent | IPublicKeyEvent;
+export interface IInitializeChatEventData {
+  id: string;
+  usernames: string[];
+}
+
+export interface IInitializeChatEvent extends IPeerBaseEvent {
+  type: EPeerEventType.initializeChat;
+  data: IInitializeChatEventData;
+}
+
+export type TPeerEvent =
+  | IInitializeGameEvent
+  | IActionEvent
+  | IAfterConnectionStartedCheckEvent
+  | IPublicKeyEvent
+  | IInitializeChatEvent;

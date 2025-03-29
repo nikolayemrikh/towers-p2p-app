@@ -99,6 +99,16 @@ export const PeerLobby: FC = () => {
               draft[getUsernameFromPeerId(PAGE_PREFIX, connection.peer)] = publicKey;
             })
           );
+        } else if (event.type === EPeerEventType.initializeChat) {
+          const { id, usernames } = event.data;
+
+          const chats = JSON.parse(localStorage.getItem(ELocalStorageKey.Chats) ?? '{}');
+          chats[id] = {
+            id,
+            usernames,
+          };
+          localStorage.setItem(ELocalStorageKey.Chats, JSON.stringify(chats));
+          navigate(`${routes.chat}/${id}`);
         }
       });
     },
@@ -261,6 +271,32 @@ export const PeerLobby: FC = () => {
                 }}
               >
                 Начать новую игру
+              </Button>
+            )}
+
+            {Object.values(playersConnections).length > 0 && (
+              <Button
+                variant="contained"
+                onClick={() => {
+                  const chatId = uuid();
+                  const otherPlayerUsernames = Object.values(playersConnections).map((connection) =>
+                    getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
+                  );
+                  const playerUsernames = [...otherPlayerUsernames, username];
+                  const chats = JSON.parse(localStorage.getItem(ELocalStorageKey.Chats) ?? '{}');
+                  chats[chatId] = {
+                    id: chatId,
+                    usernames: playerUsernames,
+                  };
+                  broadcastEvent({
+                    type: EPeerEventType.initializeChat,
+                    data: { id: chatId, usernames: playerUsernames },
+                  });
+                  localStorage.setItem(ELocalStorageKey.Chats, JSON.stringify(chats));
+                  navigate(`${routes.chat}/${chatId}`);
+                }}
+              >
+                Открыть чат
               </Button>
             )}
           </Stack>
