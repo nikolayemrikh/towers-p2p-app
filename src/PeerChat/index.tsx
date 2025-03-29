@@ -5,7 +5,7 @@ import SendIcon from '@mui/icons-material/Send';
 import { Button, Stack, TextField, Typography } from '@mui/material';
 import { produce } from 'immer';
 import Peer, { DataConnection } from 'peerjs';
-import { FC, useCallback, useEffect, useMemo, useState } from 'react';
+import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { v4 as uuid } from 'uuid';
 
@@ -48,6 +48,14 @@ export const PeerChat: FC = () => {
   const [messages, setMessages] = useState<IPeerChatMessage[]>([]);
   const [message, setMessage] = useState('');
   const isAllPlayersConnected = Object.keys(playersConnections).length === usernames.length - 1;
+
+  const scrollableRootRef = useRef<HTMLDivElement>(null);
+  const scrollToTheBottom = useCallback(() => {
+    const scrollableRoot = scrollableRootRef.current;
+    if (scrollableRoot) {
+      scrollableRoot.scrollTop = scrollableRoot.scrollHeight;
+    }
+  }, []);
 
   const handleNewConnection = useCallback((connection: DataConnection) => {
     connection.on('open', async () => {
@@ -168,11 +176,16 @@ export const PeerChat: FC = () => {
     setMessage('');
   };
 
+  useEffect(() => {
+    if (messages.length === 0) return;
+    scrollToTheBottom();
+  }, [messages, scrollToTheBottom]);
+
   return (
     <PageMain>
       {isAllPlayersConnected ? (
         <Stack direction="column" flexGrow={1} gap={2} height="100%">
-          <Stack direction="column" gap={1} flexGrow={1} overflow="auto">
+          <Stack direction="column" gap={1} flexGrow={1} overflow="auto" ref={scrollableRootRef}>
             <Stack direction="column" gap={1}>
               {messages.map((message, idx) => (
                 <Stack
