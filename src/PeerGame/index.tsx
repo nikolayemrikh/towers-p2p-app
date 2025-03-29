@@ -15,7 +15,7 @@ import { EPeerEventType } from '@app/core/peer/enums';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { getUsernameFromPeerId } from '@app/core/peer/getUsernameFromPeerId';
 import { IAfterConnectionStartedCheckEvent, TPeerEvent } from '@app/core/peer/types';
-import { Stack, Typography } from '@mui/material';
+import { Stack } from '@mui/material';
 import { produce } from 'immer';
 import { DataConnection, Peer } from 'peerjs';
 import { useParams } from 'react-router-dom';
@@ -250,9 +250,6 @@ export const PeerGame: FC = () => {
 
   return (
     <PageMain>
-      <Stack>
-        <Typography variant="h1">Peer Game</Typography>
-      </Stack>
       {isAllPlayersConnected ? (
         <div style={{ height: '100%', padding: '16px' }}>
           <div>
@@ -333,7 +330,7 @@ export const PeerGame: FC = () => {
           </div>
           <div>Towers</div>
           {/* Decks horizontal list */}
-          <Stack direction="row" justifyContent="space-between" paddingX={1}>
+          <Stack direction="row" justifyContent="space-between" gap={2}>
             <UserTower
               boardId={id}
               turnUserId={board.turnUsername ?? null}

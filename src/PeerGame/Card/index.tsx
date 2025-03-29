@@ -2,6 +2,7 @@ import { MAX_CARD_NUMBER } from '@app/core/game/constants';
 import { EPower } from '@app/core/game/enums';
 import { Paper, Stack } from '@mui/material';
 import { FC } from 'react';
+import towerTextureImg from './tower-texture.jpg';
 
 const PowerTitle: Record<EPower, string> = {
   Move_down_by_two: 'Move down by two',
@@ -22,7 +23,7 @@ export const Card: FC<{
   isActionAvailable: boolean;
   isProtected: boolean;
   onClick?: () => void;
-  width?: number;
+  width?: number | string;
 }> = (props) => {
   const { number, power, isActionAvailable, isProtected, onClick, width } = props;
   const percent = number / (MAX_CARD_NUMBER / 100);
@@ -108,7 +109,16 @@ export const Card: FC<{
           />
         </Stack>
         <Stack position="absolute" top={0} left={0} right={0} bottom={0} justifyContent="center" alignItems="center">
-          <Stack width={`${towerWidth}%`} height="100%" bgcolor="burlywood" />
+          <Stack
+            width={`${towerWidth}%`}
+            height="100%"
+            bgcolor="burlywood"
+            sx={{
+              backgroundImage: `url(${towerTextureImg})`,
+              backgroundSize: '400px',
+              backgroundPosition: 'center',
+            }}
+          />
         </Stack>
         {/* <Typography
         variant="body1"

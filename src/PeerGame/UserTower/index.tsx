@@ -5,7 +5,7 @@ import { checkIsUserCardAvailableForInitialAction } from '@app/core/game/common/
 import { CARD_VARIANTS } from '@app/core/game/constants';
 import { EGameActionType, EPower } from '@app/core/game/enums';
 import { ITowerCard, TGameAction } from '@app/core/game/types';
-import { Stack, Typography } from '@mui/material';
+import { Stack, Typography, useMediaQuery } from '@mui/material';
 import { Card } from '../Card';
 
 export type TCardVariants = Map<number, EPower>;
@@ -143,8 +143,10 @@ export const UserTower: FC<{
     }
   };
 
+  const isLowerThanSmBreakpoint = useMediaQuery((t) => t.breakpoints.down('sm'));
+
   return (
-    <Stack direction="column" gap={1}>
+    <Stack direction="column" gap={1} width={isLowerThanSmBreakpoint ? 120 : 230}>
       <Typography variant="h6">{userId} (me)</Typography>
       <Stack direction="column-reverse" gap={1}>
         {cards.map((card, index) => {
@@ -155,7 +157,7 @@ export const UserTower: FC<{
               key={card.number}
               number={card.number}
               power={power}
-              width={230}
+              width="100%"
               isActionAvailable={isActionAvailable}
               isProtected={card.isProtected}
               onClick={() => handleCardClick(index, isActionAvailable)}
