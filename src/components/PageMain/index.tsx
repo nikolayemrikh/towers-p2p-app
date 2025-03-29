@@ -5,8 +5,9 @@ export const PageMain: FC<{ children: ReactNode }> = ({ children }) => {
   const theme = useTheme();
 
   return (
-    <Stack component="main" direction="row" justifyContent="center" flexGrow={1}>
+    <Stack component="main" direction="row" justifyContent="center" flexGrow={1} height="100%">
       <Stack
+        height="100%"
         direction="column"
         flexGrow={1}
         maxWidth={`min(100%, ${theme.breakpoints.values.xl}px)`}

@@ -171,27 +171,29 @@ export const PeerChat: FC = () => {
   return (
     <PageMain>
       {isAllPlayersConnected ? (
-        <Stack direction="column" flexGrow={1}>
-          <Stack direction="column" gap={1} flexGrow={1}>
-            {messages.map((message, idx) => (
-              <Stack
-                key={message.id}
-                direction="row"
-                gap={1}
-                justifyContent="space-between"
-                bgcolor={(t) => (idx % 2 === 0 ? t.palette.info.dark : 'transparent')}
-                padding={2}
-                borderRadius={2}
-              >
-                <Stack direction="column" gap={0.5}>
-                  <Typography variant="body2">{message.username}</Typography>
-                  <Typography variant="body1">{message.text}</Typography>
+        <Stack direction="column" flexGrow={1} gap={2} height="100%">
+          <Stack direction="column" gap={1} flexGrow={1} overflow="auto">
+            <Stack direction="column" gap={1}>
+              {messages.map((message, idx) => (
+                <Stack
+                  key={message.id}
+                  direction="row"
+                  gap={1}
+                  justifyContent="space-between"
+                  bgcolor={(t) => (idx % 2 === 0 ? t.palette.info.dark : 'transparent')}
+                  padding={2}
+                  borderRadius={2}
+                >
+                  <Stack direction="column" gap={0.5}>
+                    <Typography variant="body2">{message.username}</Typography>
+                    <Typography variant="body1">{message.text}</Typography>
+                  </Stack>
+                  <Typography variant="body2">
+                    {new Date(message.createdAt).toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
+                  </Typography>
                 </Stack>
-                <Typography variant="body2">
-                  {new Date(message.createdAt).toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                </Typography>
-              </Stack>
-            ))}
+              ))}
+            </Stack>
           </Stack>
           <Stack direction="row" gap={2}>
             <TextField
