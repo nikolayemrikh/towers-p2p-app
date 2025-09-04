@@ -4,15 +4,25 @@ import { Paper, Stack, Typography } from '@mui/material';
 import { FC } from 'react';
 import towerTextureImg from './tower-texture.jpg';
 
+// const PowerTitle: Record<EPower, string> = {
+//   Move_down_by_two: 'Move down by two',
+//   Move_up_by_two: 'Move up by two',
+//   Protect: 'Protect',
+//   Remove_bottom: 'Remove bottom',
+//   Remove_middle: 'Remove middle',
+//   Remove_top: 'Remove top',
+//   Swap_neighbours: 'Swap neighbours',
+//   Swap_through_one: 'Swap through one',
+// };
 const PowerTitle: Record<EPower, string> = {
-  Move_down_by_two: 'Move down by two',
-  Move_up_by_two: 'Move up by two',
-  Protect: 'Protect',
-  Remove_bottom: 'Remove bottom',
-  Remove_middle: 'Remove middle',
-  Remove_top: 'Remove top',
-  Swap_neighbours: 'Swap neighbours',
-  Swap_through_one: 'Swap through one',
+  Move_down_by_two: 'Перемещение вниз на две',
+  Move_up_by_two: 'Перемещение вверх на две',
+  Protect: 'Защита',
+  Remove_bottom: 'Удалить нижнюю',
+  Remove_middle: 'Удалить среднюю',
+  Remove_top: 'Удалить верхнюю',
+  Swap_neighbours: 'Поменять местами соседние',
+  Swap_through_one: 'Поменять местами через одну',
 };
 
 const TOWeR_CAP = 20;
