@@ -135,13 +135,16 @@ export const Card: FC<{
         <Typography
           variant="body1"
           color="white"
-          whiteSpace="nowrap"
+          // whiteSpace="nowrap"
+          textAlign="center"
+          position="absolute"
           sx={(t) => ({
+            bottom: 10,
             zIndex: t.zIndex.tooltip,
             fontSize: '90%',
           })}
         >
-          ({PowerTitle[power]})
+          {PowerTitle[power]}
         </Typography>
       </Stack>
     </Paper>

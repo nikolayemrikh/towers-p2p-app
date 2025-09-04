@@ -146,7 +146,7 @@ export const UserTower: FC<{
   const isLowerThanSmBreakpoint = useMediaQuery((t) => t.breakpoints.down('sm'));
 
   return (
-    <Stack direction="column" gap={1} width={isLowerThanSmBreakpoint ? 120 : 230}>
+    <Stack direction="column" gap={1} width={isLowerThanSmBreakpoint ? 170 : 230}>
       <Typography variant="h6">{userId} (me)</Typography>
       <Stack direction="column-reverse" gap={1}>
         {cards.map((card, index) => {

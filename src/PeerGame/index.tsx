@@ -251,7 +251,7 @@ export const PeerGame: FC = () => {
   return (
     <PageMain>
       {isAllPlayersConnected ? (
-        <div style={{ height: '100%', padding: '16px' }}>
+        <div style={{ height: '100%' }}>
           <div>
             <div>Deck ({board.closedCardNumbers.length})</div>
             {winnerUsername && <div>Winner: {winnerUsername}</div>}
@@ -330,7 +330,7 @@ export const PeerGame: FC = () => {
           </div>
           <div>Towers</div>
           {/* Decks horizontal list */}
-          <Stack direction="row" justifyContent="space-between" gap={2}>
+          <Stack direction="row" justifyContent="space-between" gap={1}>
             <UserTower
               boardId={id}
               turnUserId={board.turnUsername ?? null}

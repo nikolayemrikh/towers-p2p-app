@@ -10,7 +10,7 @@ export const Tower: FC<{ cards: ITowerCard[]; userId: string }> = (props) => {
 
   const isLowerThanSmBreakpoint = useMediaQuery((t) => t.breakpoints.down('sm'));
   return (
-    <Stack direction="column" gap={1} width={isLowerThanSmBreakpoint ? 120 : 230}>
+    <Stack direction="column" gap={1} width={isLowerThanSmBreakpoint ? 170 : 230}>
       <Stack direction="row" justifyContent="space-between"></Stack>
       <Typography variant="h6">{userId}</Typography>
       <Stack direction="column-reverse" gap={1}>
