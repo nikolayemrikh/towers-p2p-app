@@ -125,6 +125,7 @@ export const Card: FC<{
         <Typography
           variant="body1"
           color="white"
+          whiteSpace="nowrap"
           sx={(t) => ({
             zIndex: t.zIndex.tooltip,
             fontSize: '90%',
