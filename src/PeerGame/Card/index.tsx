@@ -129,7 +129,6 @@ export const Card: FC<{
           sx={(t) => ({
             zIndex: t.zIndex.tooltip,
             fontSize: '90%',
-            marginTop: '5%',
           })}
         >
           ({PowerTitle[power]})
