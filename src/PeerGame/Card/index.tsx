@@ -1,6 +1,6 @@
 import { MAX_CARD_NUMBER } from '@app/core/game/constants';
 import { EPower } from '@app/core/game/enums';
-import { Paper, Stack } from '@mui/material';
+import { Paper, Stack, Typography } from '@mui/material';
 import { FC } from 'react';
 import towerTextureImg from './tower-texture.jpg';
 
@@ -43,6 +43,8 @@ export const Card: FC<{
         overflow: 'hidden',
         width: width ?? 230,
         aspectRatio: '1000/750',
+        backgroundColor: isActionAvailable ? 'purple' : 'black',
+        border: isProtected ? '1px solid red' : 'none',
       }}
       // style={{
       //   display: 'flex',
@@ -120,16 +122,17 @@ export const Card: FC<{
             }}
           />
         </Stack>
-        {/* <Typography
-        variant="body1"
-        color="white"
-        sx={{
-          fontSize: '90%',
-          marginTop: '5%',
-        }}
-      >
-        ({PowerTitle[power]})
-      </Typography> */}
+        <Typography
+          variant="body1"
+          color="white"
+          sx={(t) => ({
+            zIndex: t.zIndex.tooltip,
+            fontSize: '90%',
+            marginTop: '5%',
+          })}
+        >
+          ({PowerTitle[power]})
+        </Typography>
       </Stack>
     </Paper>
   );
