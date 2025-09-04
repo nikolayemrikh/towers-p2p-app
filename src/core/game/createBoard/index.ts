@@ -23,7 +23,7 @@ export const createBoard = (players: string[]): IBoard => {
     for (let i = 0; i < 7; i++) {
       newCardTower.push({ number: cardsInBoardDeck.shift()!.number, isProtected: false });
     }
-    newCardTower.sort((a, b) => b.number - a.number);
+    newCardTower.sort((a, b) => a.number - b.number);
     cardTowers[player] = { cards: newCardTower };
   }
 
