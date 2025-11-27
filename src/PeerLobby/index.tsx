@@ -109,6 +109,16 @@ export const PeerLobby: FC = () => {
           };
           localStorage.setItem(ELocalStorageKey.Chats, JSON.stringify(chats));
           navigate(`${routes.chat}/${id}`);
+        } else if (event.type === EPeerEventType.initializeVideo) {
+          const { id, usernames } = event.data;
+
+          const chats = JSON.parse(localStorage.getItem(ELocalStorageKey.VideoRooms) ?? '{}');
+          chats[id] = {
+            id,
+            usernames,
+          };
+          localStorage.setItem(ELocalStorageKey.VideoRooms, JSON.stringify(chats));
+          navigate(`${routes.video}/${id}`);
         }
       });
     },
@@ -275,29 +285,55 @@ export const PeerLobby: FC = () => {
             )}
 
             {Object.values(playersConnections).length > 0 && (
-              <Button
-                variant="contained"
-                onClick={() => {
-                  const chatId = uuid();
-                  const otherPlayerUsernames = Object.values(playersConnections).map((connection) =>
-                    getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
-                  );
-                  const playerUsernames = [...otherPlayerUsernames, username];
-                  const chats = JSON.parse(localStorage.getItem(ELocalStorageKey.Chats) ?? '{}');
-                  chats[chatId] = {
-                    id: chatId,
-                    usernames: playerUsernames,
-                  };
-                  broadcastEvent({
-                    type: EPeerEventType.initializeChat,
-                    data: { id: chatId, usernames: playerUsernames },
-                  });
-                  localStorage.setItem(ELocalStorageKey.Chats, JSON.stringify(chats));
-                  navigate(`${routes.chat}/${chatId}`);
-                }}
-              >
-                Открыть чат
-              </Button>
+              <>
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    const chatId = uuid();
+                    const otherPlayerUsernames = Object.values(playersConnections).map((connection) =>
+                      getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
+                    );
+                    const playerUsernames = [...otherPlayerUsernames, username];
+                    const chats = JSON.parse(localStorage.getItem(ELocalStorageKey.Chats) ?? '{}');
+                    chats[chatId] = {
+                      id: chatId,
+                      usernames: playerUsernames,
+                    };
+                    broadcastEvent({
+                      type: EPeerEventType.initializeChat,
+                      data: { id: chatId, usernames: playerUsernames },
+                    });
+                    localStorage.setItem(ELocalStorageKey.Chats, JSON.stringify(chats));
+                    navigate(`${routes.chat}/${chatId}`);
+                  }}
+                >
+                  Открыть чат
+                </Button>
+
+                <Button
+                  variant="contained"
+                  onClick={() => {
+                    const chatId = uuid();
+                    const otherPlayerUsernames = Object.values(playersConnections).map((connection) =>
+                      getUsernameFromPeerId(PAGE_PREFIX, connection.peer)
+                    );
+                    const playerUsernames = [...otherPlayerUsernames, username];
+                    const chats = JSON.parse(localStorage.getItem(ELocalStorageKey.VideoRooms) ?? '{}');
+                    chats[chatId] = {
+                      id: chatId,
+                      usernames: playerUsernames,
+                    };
+                    broadcastEvent({
+                      type: EPeerEventType.initializeChat,
+                      data: { id: chatId, usernames: playerUsernames },
+                    });
+                    localStorage.setItem(ELocalStorageKey.VideoRooms, JSON.stringify(chats));
+                    navigate(`${routes.video}/${chatId}`);
+                  }}
+                >
+                  Видеозвонок
+                </Button>
+              </>
             )}
           </Stack>
         </Card>

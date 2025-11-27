@@ -5,4 +5,5 @@ export const ELocalStorageKey = {
   PublicKey: 'public_key',
   PrivateKey: 'private_key',
   Chats: 'chats',
+  VideoRooms: 'video_rooms',
 } as const;

@@ -39,9 +39,19 @@ export interface IInitializeChatEventData {
   usernames: string[];
 }
 
+export interface IInitializeVideoEventData {
+  id: string;
+  usernames: string[];
+}
+
 export interface IInitializeChatEvent extends IPeerBaseEvent {
   type: EPeerEventType.initializeChat;
   data: IInitializeChatEventData;
+}
+
+export interface IInitializeVideoEvent extends IPeerBaseEvent {
+  type: EPeerEventType.initializeVideo;
+  data: IInitializeVideoEventData;
 }
 
 export type TPeerEvent =
@@ -49,4 +59,5 @@ export type TPeerEvent =
   | IActionEvent
   | IAfterConnectionStartedCheckEvent
   | IPublicKeyEvent
-  | IInitializeChatEvent;
+  | IInitializeChatEvent
+  | IInitializeVideoEvent;
