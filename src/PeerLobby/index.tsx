@@ -324,7 +324,7 @@ export const PeerLobby: FC = () => {
                       usernames: playerUsernames,
                     };
                     broadcastEvent({
-                      type: EPeerEventType.initializeChat,
+                      type: EPeerEventType.initializeVideo,
                       data: { id: chatId, usernames: playerUsernames },
                     });
                     localStorage.setItem(ELocalStorageKey.VideoRooms, JSON.stringify(chats));
