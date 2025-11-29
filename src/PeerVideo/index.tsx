@@ -132,7 +132,7 @@ export const PeerVideo: FC = () => {
       setPeer(peer);
     });
 
-    peer.on('call', async (connection) => {
+    peer.on('call', (connection) => {
       connection.answer(mediaStream);
       console.debug('connection received', connection.peer);
 
