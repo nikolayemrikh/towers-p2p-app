@@ -70,6 +70,9 @@ export const PeerVideo: FC = () => {
       );
     });
     connection.on('close', () => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
       console.debug('connection closed', connection.peer);
       setPlayersConnections((prev) =>
         produce(prev, (draft) => {
@@ -176,13 +179,6 @@ export const PeerVideo: FC = () => {
             if (draft[connectionId]) continue;
             // const connection: DataConnection | undefined = peer.connect(connectionId, { serialization: 'json' });
             const connection: MediaConnection | undefined = peer.call(connectionId, mediaStream);
-            connection.on('stream', (stream) => {
-              console.debug('stream');
-
-              if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-              }
-            });
             // could be undefined if peer is destroyed
             if (!connection) return;
             draft[connectionId] = connection;
