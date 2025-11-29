@@ -1,4 +1,3 @@
-import { PageMain } from '@app/components/PageMain';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
 import { Stack } from '@mui/material';
@@ -224,57 +223,15 @@ export const PeerVideo: FC = () => {
   //   setMessage('');
   // };
 
-  return (
-    <PageMain>
-      {isAllPlayersConnected ? (
-        <Stack direction="column" flexGrow={1} gap={2} height="100%">
-          <Stack direction="column" gap={1} flexGrow={1} overflow="auto" ref={scrollableRootRef}>
-            <Stack direction="column" gap={1}>
-              <video ref={videoRef} style={{ flexGrow: 1, width: '100%' }} autoPlay />
-              {/* {messages.map((message, idx) => (
-                <Stack
-                  key={message.id}
-                  direction="row"
-                  gap={1}
-                  justifyContent="space-between"
-                  bgcolor={(t) => (idx % 2 === 0 ? t.palette.info.dark : 'transparent')}
-                  padding={2}
-                  borderRadius={2}
-                >
-                  <Stack direction="column" gap={0.5}>
-                    <Typography variant="body2">{message.username}</Typography>
-                    <Typography variant="body1">{message.text}</Typography>
-                  </Stack>
-                  <Typography variant="body2">
-                    {new Date(message.createdAt).toLocaleString('ru-RU', { hour: '2-digit', minute: '2-digit' })}
-                  </Typography>
-                </Stack>
-              ))} */}
-            </Stack>
-          </Stack>
-          {/* <Stack direction="row" gap={2}>
-            <TextField
-              fullWidth
-              multiline
-              minRows={1}
-              maxRows={5}
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter') {
-                  e.preventDefault();
-                  submitMessage();
-                }
-              }}
-            />
-            <Button variant="contained" endIcon={<SendIcon />} onClick={submitMessage}>
-              Send
-            </Button>
-          </Stack> */}
+  return isAllPlayersConnected ? (
+    <Stack direction="column" flexGrow={1} gap={2} height="100%">
+      <Stack direction="column" gap={1} flexGrow={1} overflow="auto" ref={scrollableRootRef}>
+        <Stack direction="column" gap={1}>
+          <video ref={videoRef} style={{ flexGrow: 1, width: '100%' }} autoPlay />
         </Stack>
-      ) : (
-        <div>Waiting for other players...</div>
-      )}
-    </PageMain>
+      </Stack>
+    </Stack>
+  ) : (
+    <div>Waiting for other players...</div>
   );
 };
