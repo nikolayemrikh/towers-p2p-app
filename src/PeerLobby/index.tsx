@@ -127,7 +127,19 @@ export const PeerLobby: FC = () => {
 
   useEffect(() => {
     if (!publicKey) return;
-    const peer = new Peer(getPeerId(PAGE_PREFIX, username));
+    const peer = new Peer(getPeerId(PAGE_PREFIX, username), {
+      host: import.meta.env.VITE_PEERJS_SERVER_HOST,
+      port: import.meta.env.VITE_PEERJS_SERVER_PORT,
+      config: {
+        iceServers: [
+          { url: 'stun:stun.l.google.com:19302' },
+          {
+            url: `turn:${import.meta.env.TURN_SERVER_USERNAME}@${import.meta.env.TURN_SERVER_HOST}:${import.meta.env.TURN_SERVER_PORT}`,
+            credential: import.meta.env.TURN_SERVER_CREDENTIAL,
+          },
+        ],
+      },
+    });
     setPeer(peer);
 
     peer.on('connection', (connection) => {
