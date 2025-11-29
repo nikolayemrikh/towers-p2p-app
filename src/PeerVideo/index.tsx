@@ -83,6 +83,17 @@ export const PeerVideo: FC = () => {
         })
       );
     });
+    connection.on('error', () => {
+      if (videoRef.current) {
+        videoRef.current.srcObject = null;
+      }
+      console.debug('connection error', connection.peer);
+      setPlayersConnections((prev) =>
+        produce(prev, (draft) => {
+          delete draft[connection.peer];
+        })
+      );
+    });
 
     // const handleData = async (data: unknown) => {
     //   console.debug('data received', data);
