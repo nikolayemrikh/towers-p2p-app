@@ -56,7 +56,7 @@ export const PeerVideo: FC = () => {
   // }, []);
 
   const handleNewConnection = useCallback((connection: MediaConnection) => {
-    connection.on('stream', async (stream) => {
+    connection.on('stream', (stream) => {
       videoRef.current!.srcObject = stream;
       // try {
       //   videoRef.current.play();
