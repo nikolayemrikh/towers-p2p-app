@@ -134,10 +134,11 @@ export const PeerVideo: FC = () => {
     });
 
     peer.on('call', (connection) => {
-      connection.answer(mediaStream);
       console.debug('connection received', connection.peer);
-
-      handleNewConnection(connection);
+      if (window.confirm('Ответить?')) {
+        connection.answer(mediaStream);
+        handleNewConnection(connection);
+      }
     });
     peer.on('disconnected', (connectionId) => {
       console.debug('disconnected', connectionId);
