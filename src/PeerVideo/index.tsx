@@ -59,6 +59,7 @@ export const PeerVideo: FC = () => {
     connection.on('stream', async (stream) => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
+        videoRef.current.play();
       }
       console.debug('connection opened', connection.peer);
 
