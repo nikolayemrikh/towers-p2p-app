@@ -56,10 +56,14 @@ export const PeerVideo: FC = () => {
   // }, []);
 
   const handleNewConnection = useCallback((connection: MediaConnection) => {
-    connection.on('stream', (stream) => {
+    connection.on('stream', async (stream) => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        videoRef.current.play();
+        try {
+          videoRef.current.play();
+        } catch {
+          //
+        }
       }
       console.debug('connection opened', connection.peer);
 
@@ -119,12 +123,10 @@ export const PeerVideo: FC = () => {
     });
 
     peer.on('call', async (connection) => {
+      connection.answer(mediaStream);
       console.debug('connection received', connection.peer);
 
       handleNewConnection(connection);
-      if (window.confirm('Вам звонят, ответить?')) {
-        connection.answer(mediaStream);
-      }
     });
     peer.on('disconnected', (connectionId) => {
       console.debug('disconnected', connectionId);
@@ -181,6 +183,18 @@ export const PeerVideo: FC = () => {
             if (draft[connectionId]) continue;
             // const connection: DataConnection | undefined = peer.connect(connectionId, { serialization: 'json' });
             const connection: MediaConnection | undefined = peer.call(connectionId, mediaStream);
+            connection.on('stream', (stream) => {
+              console.debug('stream');
+
+              if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+                try {
+                  videoRef.current.play();
+                } catch {
+                  //
+                }
+              }
+            });
             // could be undefined if peer is destroyed
             if (!connection) return;
             draft[connectionId] = connection;
@@ -208,7 +222,7 @@ export const PeerVideo: FC = () => {
     <Stack direction="column" flexGrow={1} gap={2} height="100%">
       <Stack direction="column" gap={1} flexGrow={1} overflow="auto" ref={scrollableRootRef}>
         <Stack direction="column" gap={1}>
-          <video ref={videoRef} style={{ flexGrow: 1, width: '100%' }} />
+          <video ref={videoRef} style={{ flexGrow: 1, width: '100%' }} autoPlay />
         </Stack>
       </Stack>
     </Stack>
