@@ -232,6 +232,6 @@ export const PeerVideo: FC = () => {
       </Stack>
     </Stack>
   ) : (
-    <div>Waiting for other players...</div>
+    <div>Ждем всех остальных</div>
   );
 };
