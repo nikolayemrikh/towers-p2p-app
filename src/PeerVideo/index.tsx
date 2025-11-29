@@ -193,7 +193,7 @@ export const PeerVideo: FC = () => {
             if (draft[connectionId]) continue;
             // const connection: DataConnection | undefined = peer.connect(connectionId, { serialization: 'json' });
             const connection: MediaConnection | undefined = peer.call(connectionId, mediaStream); // could be undefined if peer is destroyed
-            if (!connection) return;
+            if (!connection) throw new Error('no connection created');
             draft[connectionId] = connection;
             console.debug('connection created', connection.peer);
             handleNewConnection(connection);
