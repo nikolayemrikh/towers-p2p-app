@@ -59,11 +59,11 @@ export const PeerVideo: FC = () => {
     connection.on('stream', async (stream) => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
-        try {
-          videoRef.current.play();
-        } catch {
-          //
-        }
+        // try {
+        //   videoRef.current.play();
+        // } catch {
+        //   //
+        // }
       }
       console.debug('connection opened', connection.peer);
 
@@ -186,14 +186,12 @@ export const PeerVideo: FC = () => {
             connection.on('stream', (stream) => {
               console.debug('stream');
 
-              if (videoRef.current) {
-                videoRef.current.srcObject = stream;
-                try {
-                  videoRef.current.play();
-                } catch {
-                  //
-                }
-              }
+              videoRef.current!.srcObject = stream;
+              // try {
+              //   videoRef.current!.play();
+              // } catch {
+              //   //
+              // }
             });
             // could be undefined if peer is destroyed
             if (!connection) return;
