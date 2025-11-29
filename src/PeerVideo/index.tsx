@@ -115,10 +115,7 @@ export const PeerVideo: FC = () => {
     });
 
     peer.on('call', async (connection) => {
-      if (mediaStream) {
-        connection.answer(mediaStream);
-        console.debug('answer');
-      }
+      connection.answer(mediaStream);
       console.debug('connection received', connection.peer);
 
       handleNewConnection(connection);
@@ -169,31 +166,34 @@ export const PeerVideo: FC = () => {
   useEffect(() => {
     if (!peer || !mediaStream) return;
 
-    setPlayersConnections((prev) =>
-      produce(prev, (draft) => {
-        for (const player of usernames) {
-          const connectionId = getPeerId(PAGE_PREFIX, player);
-          if (player === username) continue;
-          if (draft[connectionId]) continue;
-          // const connection: DataConnection | undefined = peer.connect(connectionId, { serialization: 'json' });
-          const connection: MediaConnection | undefined = peer.call(connectionId, mediaStream);
-          connection.on('stream', (stream) => {
-            console.debug('stream');
+    const timer = window.setTimeout(() => {
+      setPlayersConnections((prev) =>
+        produce(prev, (draft) => {
+          for (const player of usernames) {
+            const connectionId = getPeerId(PAGE_PREFIX, player);
+            if (player === username) continue;
+            if (draft[connectionId]) continue;
+            // const connection: DataConnection | undefined = peer.connect(connectionId, { serialization: 'json' });
+            const connection: MediaConnection | undefined = peer.call(connectionId, mediaStream);
+            connection.on('stream', (stream) => {
+              console.debug('stream');
 
-            if (videoRef.current) {
-              videoRef.current.srcObject = stream;
-            }
-          });
-          // could be undefined if peer is destroyed
-          if (!connection) return;
-          draft[connectionId] = connection;
-          console.debug('connection created', connection.peer);
-          handleNewConnection(connection);
-        }
-      })
-    );
+              if (videoRef.current) {
+                videoRef.current.srcObject = stream;
+              }
+            });
+            // could be undefined if peer is destroyed
+            if (!connection) return;
+            draft[connectionId] = connection;
+            console.debug('connection created', connection.peer);
+            handleNewConnection(connection);
+          }
+        })
+      );
+    }, Math.random() * 1200);
 
     return () => {
+      window.clearTimeout(timer);
       setPlayersConnections((prev) =>
         produce(prev, (draft) => {
           for (const connection of Object.values(draft)) {
@@ -204,24 +204,6 @@ export const PeerVideo: FC = () => {
       );
     };
   }, [peer, mediaStream, username, usernames, handleNewConnection]);
-
-  // const broadcastEvent = async (event: TPeerChatEvent) => {
-  //   // await Promise.all(Object.values(playersConnections).map((connection) => connection.send(event)));
-  // };
-
-  // const submitMessage = () => {
-  //   const newMessage = { id: uuid(), createdAt: new Date().toISOString(), text: message, username };
-  //   // broadcastEvent({
-  //   //   type: EPeerChatEvent.message,
-  //   //   data: newMessage,
-  //   // });
-  //   setMessages((prev) =>
-  //     produce(prev, (draft) => {
-  //       draft.push(newMessage);
-  //     })
-  //   );
-  //   setMessage('');
-  // };
 
   return isAllPlayersConnected ? (
     <Stack direction="column" flexGrow={1} gap={2} height="100%">
