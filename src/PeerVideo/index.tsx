@@ -41,11 +41,11 @@ export const PeerVideo: FC = () => {
   if (!username) throw new Error('username is required');
   const [peer, setPeer] = useState<Peer | null>(null);
 
-  const [playersConnections, setPlayersConnections] = useState<Record<string, MediaConnection>>({});
+  const [, setPlayersConnections] = useState<Record<string, MediaConnection>>({});
   // const [messages, setMessages] = useState<IPeerChatMessage[]>([]);
   // const [message, setMessage] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
-  const isAllPlayersConnected = Object.keys(playersConnections).length === usernames.length - 1;
+  // const isAllPlayersConnected = Object.keys(playersConnections).length === usernames.length - 1;
 
   const scrollableRootRef = useRef<HTMLDivElement>(null);
   // const scrollToTheBottom = useCallback(() => {
@@ -206,7 +206,7 @@ export const PeerVideo: FC = () => {
     };
   }, [peer, mediaStream, username, usernames, handleNewConnection]);
 
-  return isAllPlayersConnected ? (
+  return (
     <Stack direction="column" flexGrow={1} gap={2} height="100%">
       <Stack direction="column" gap={1} flexGrow={1} overflow="auto" ref={scrollableRootRef}>
         <Stack direction="column" gap={1}>
@@ -214,7 +214,5 @@ export const PeerVideo: FC = () => {
         </Stack>
       </Stack>
     </Stack>
-  ) : (
-    <div>Ждем всех остальных</div>
   );
 };
