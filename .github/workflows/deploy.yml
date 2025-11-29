@@ -37,6 +37,13 @@ jobs:
         run: npm ci
 
       - name: Build
+        env:
+          VITE_TURN_SERVER_HOST: ${{ secrets.TURN_SERVER_HOST }}
+          VITE_TURN_SERVER_PORT: ${{ secrets.TURN_SERVER_PORT }}
+          VITE_TURN_SERVER_USERNAME: ${{ secrets.TURN_SERVER_USERNAME }}
+          VITE_TURN_SERVER_CREDENTIAL: ${{ secrets.TURN_SERVER_CREDENTIAL }}
+          VITE_PEERJS_SERVER_HOST: ${{ secrets.PEERJS_SERVER_HOST }}
+          VITE_PEERJS_SERVER_PORT: ${{ secrets.PEERJS_SERVER_PORT }}
         run: npm run build
 
       - name: Copy 404.html

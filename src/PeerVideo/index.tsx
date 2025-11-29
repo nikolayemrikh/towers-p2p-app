@@ -98,7 +98,19 @@ export const PeerVideo: FC = () => {
 
   useEffect(() => {
     if (!mediaStream) return;
-    const peer = new Peer(getPeerId(PAGE_PREFIX, username));
+    const peer = new Peer(getPeerId(PAGE_PREFIX, username), {
+      host: import.meta.env.VITE_PEERJS_SERVER_HOST,
+      port: import.meta.env.VITE_PEERJS_SERVER_PORT,
+      config: {
+        iceServers: [
+          { url: 'stun:stun.l.google.com:19302' },
+          {
+            url: `turn:${import.meta.env.TURN_SERVER_USERNAME}@${import.meta.env.TURN_SERVER_HOST}:${import.meta.env.TURN_SERVER_PORT}`,
+            credential: import.meta.env.TURN_SERVER_CREDENTIAL,
+          },
+        ],
+      },
+    });
     peer.on('open', () => {
       setPeer(peer);
     });
@@ -143,7 +155,17 @@ export const PeerVideo: FC = () => {
 
   useEffect(() => {
     (async () => {
-      const ms = await navigator.mediaDevices.getUserMedia({ video: true });
+      const ms = await navigator.mediaDevices.getUserMedia({
+        video: {
+          width: { min: 1280, ideal: 1920, max: 2560 },
+          height: { min: 720, ideal: 1080, max: 1440 },
+          frameRate: { ideal: 60 }, // высокая частота кадров
+          facingMode: 'user', // или "environment" для задней камеры
+          // aspectRatio: { ideal: 16 / 9 },
+          // advanced: [{ exposureMode: 'manual' }, { focusMode: 'continuous' }, { whiteBalanceMode: 'continuous' }],
+        },
+        audio: false,
+      });
       setMediaStream(ms);
     })();
   }, []);
