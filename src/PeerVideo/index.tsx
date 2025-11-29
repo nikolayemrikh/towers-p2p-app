@@ -208,7 +208,7 @@ export const PeerVideo: FC = () => {
     <Stack direction="column" flexGrow={1} gap={2} height="100%">
       <Stack direction="column" gap={1} flexGrow={1} overflow="auto" ref={scrollableRootRef}>
         <Stack direction="column" gap={1}>
-          <video ref={videoRef} style={{ flexGrow: 1, width: '100%' }} autoPlay />
+          <video ref={videoRef} style={{ flexGrow: 1, width: '100%' }} />
         </Stack>
       </Stack>
     </Stack>
