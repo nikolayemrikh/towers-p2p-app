@@ -1,13 +1,11 @@
 import { PageMain } from '@app/components/PageMain';
 import { ELocalStorageKey } from '@app/core/localStorage/constants';
 import { getPeerId } from '@app/core/peer/getPeerId';
-import SendIcon from '@mui/icons-material/Send';
-import { Button, Stack, TextField } from '@mui/material';
+import { Stack } from '@mui/material';
 import { produce } from 'immer';
 import Peer, { MediaConnection } from 'peerjs';
 import { FC, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { v4 as uuid } from 'uuid';
 
 const PAGE_PREFIX = 'peer-chat';
 
@@ -45,18 +43,18 @@ export const PeerVideo: FC = () => {
   const [peer, setPeer] = useState<Peer | null>(null);
 
   const [playersConnections, setPlayersConnections] = useState<Record<string, MediaConnection>>({});
-  const [messages, setMessages] = useState<IPeerChatMessage[]>([]);
-  const [message, setMessage] = useState('');
+  // const [messages, setMessages] = useState<IPeerChatMessage[]>([]);
+  // const [message, setMessage] = useState('');
   const videoRef = useRef<HTMLVideoElement>(null);
   const isAllPlayersConnected = Object.keys(playersConnections).length === usernames.length - 1;
 
   const scrollableRootRef = useRef<HTMLDivElement>(null);
-  const scrollToTheBottom = useCallback(() => {
-    const scrollableRoot = scrollableRootRef.current;
-    if (scrollableRoot) {
-      scrollableRoot.scrollTop = scrollableRoot.scrollHeight;
-    }
-  }, []);
+  // const scrollToTheBottom = useCallback(() => {
+  //   const scrollableRoot = scrollableRootRef.current;
+  //   if (scrollableRoot) {
+  //     scrollableRoot.scrollTop = scrollableRoot.scrollHeight;
+  //   }
+  // }, []);
 
   const handleNewConnection = useCallback((connection: MediaConnection) => {
     connection.on('stream', async (stream) => {
@@ -119,11 +117,8 @@ export const PeerVideo: FC = () => {
 
     peer.on('call', async (connection) => {
       if (mediaStream) {
-        const acceptsCall = confirm('Videocall incoming, do you want to accept it ?');
-        if (acceptsCall) {
-          connection.answer(mediaStream);
-          console.debug('answer');
-        }
+        connection.answer(mediaStream);
+        console.debug('answer');
       }
       console.debug('connection received', connection.peer);
 
@@ -166,7 +161,7 @@ export const PeerVideo: FC = () => {
           // aspectRatio: { ideal: 16 / 9 },
           // advanced: [{ exposureMode: 'manual' }, { focusMode: 'continuous' }, { whiteBalanceMode: 'continuous' }],
         },
-        audio: false,
+        audio: true,
       });
       setMediaStream(ms);
     })();
@@ -215,24 +210,19 @@ export const PeerVideo: FC = () => {
   //   // await Promise.all(Object.values(playersConnections).map((connection) => connection.send(event)));
   // };
 
-  const submitMessage = () => {
-    const newMessage = { id: uuid(), createdAt: new Date().toISOString(), text: message, username };
-    // broadcastEvent({
-    //   type: EPeerChatEvent.message,
-    //   data: newMessage,
-    // });
-    setMessages((prev) =>
-      produce(prev, (draft) => {
-        draft.push(newMessage);
-      })
-    );
-    setMessage('');
-  };
-
-  useEffect(() => {
-    if (messages.length === 0) return;
-    scrollToTheBottom();
-  }, [messages, scrollToTheBottom]);
+  // const submitMessage = () => {
+  //   const newMessage = { id: uuid(), createdAt: new Date().toISOString(), text: message, username };
+  //   // broadcastEvent({
+  //   //   type: EPeerChatEvent.message,
+  //   //   data: newMessage,
+  //   // });
+  //   setMessages((prev) =>
+  //     produce(prev, (draft) => {
+  //       draft.push(newMessage);
+  //     })
+  //   );
+  //   setMessage('');
+  // };
 
   return (
     <PageMain>
@@ -240,7 +230,7 @@ export const PeerVideo: FC = () => {
         <Stack direction="column" flexGrow={1} gap={2} height="100%">
           <Stack direction="column" gap={1} flexGrow={1} overflow="auto" ref={scrollableRootRef}>
             <Stack direction="column" gap={1}>
-              <video ref={videoRef} style={{ width: '100%', height: '100%' }} autoPlay />
+              <video ref={videoRef} style={{ flexGrow: 1, width: '100%' }} autoPlay />
               {/* {messages.map((message, idx) => (
                 <Stack
                   key={message.id}
@@ -262,7 +252,7 @@ export const PeerVideo: FC = () => {
               ))} */}
             </Stack>
           </Stack>
-          <Stack direction="row" gap={2}>
+          {/* <Stack direction="row" gap={2}>
             <TextField
               fullWidth
               multiline
@@ -280,7 +270,7 @@ export const PeerVideo: FC = () => {
             <Button variant="contained" endIcon={<SendIcon />} onClick={submitMessage}>
               Send
             </Button>
-          </Stack>
+          </Stack> */}
         </Stack>
       ) : (
         <div>Waiting for other players...</div>
