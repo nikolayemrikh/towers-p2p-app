@@ -58,7 +58,6 @@ export const PeerVideo: FC = () => {
   const handleNewConnection = useCallback((connection: MediaConnection) => {
     connection.on('stream', (stream) => {
       videoRef.current!.srcObject = stream;
-      alert('test');
       // try {
       //   videoRef.current.play();
       // } catch {
@@ -135,10 +134,8 @@ export const PeerVideo: FC = () => {
 
     peer.on('call', (connection) => {
       console.debug('connection received', connection.peer);
-      if (window.confirm('Ответить?')) {
-        connection.answer(mediaStream);
-        handleNewConnection(connection);
-      }
+      connection.answer(mediaStream);
+      handleNewConnection(connection);
     });
     peer.on('disconnected', (connectionId) => {
       console.debug('disconnected', connectionId);
